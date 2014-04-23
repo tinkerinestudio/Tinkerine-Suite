@@ -1,0 +1,48 @@
+import PIL
+from PIL import ImageFont
+from PIL import Image
+from PIL import ImageDraw
+from OpenGL.GL import *
+class tooltipText(object):
+	def __init__(self, x, y, text, font, fontsize, colour):
+		self._x = x
+		self._y = y
+		self._text = text
+		self._font = font
+		self._fontsize = fontsize
+		self._colour = colour
+		self._pBits = None
+		
+		#self.makeText()
+		
+		#self.displayText()
+	
+	def doText(self):
+		self.makeText()
+		self.displayText()
+	
+	def makeText(self):
+	#"HelveticaNeueLTStd-Lt.otf"
+		font = ImageFont.truetype(self._font,self._fontsize)
+		img=Image.new("RGBA", (300,200),(self._colour[0],self._colour[1],self._colour[2],0))
+
+		draw = ImageDraw.Draw(img)
+		draw.text((0, 200-self._fontsize),self._text,self._colour,font=font)
+		img_flip = img.transpose(Image.FLIP_TOP_BOTTOM)
+		#draw = ImageDraw.Draw(img)
+
+		pBits = img_flip.tobytes("raw", "RGBA")
+		#print "i made a pbit"
+		self._pBits = pBits
+		#self.displayText()
+	def displayText(self):
+		glEnable(GL_TEXTURE_2D)
+		glPushMatrix()
+		glMatrixMode(GL_MODELVIEW)
+		glLoadIdentity()
+		glTranslate(0, 0,0)
+		glRasterPos(self._x,self._y)
+		glDrawPixels(300, 200, GL_RGBA, GL_UNSIGNED_BYTE, self._pBits)
+		glEnd()
+		glDisable(GL_TEXTURE_2D)
+		glPopMatrix()
