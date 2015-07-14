@@ -103,11 +103,23 @@ class glGuiControl(object):
 		self._pos = pos
 		self._size = (0,0, 1, 1)
 		self._parent.add(self)
-		self.colour1 = (139,197,63)
-		self.colour2 = (43,182,115)
-		
-		self.colour3 = (38,158,99)
-		
+
+		self.YnudgeModifer = 85
+
+		self.buttonTitleTextColour = (100,100,100)
+		self.buttonTooltipTextColour = (35,140,90)
+		self.buttonSelectedColour = (100,100,100)
+		self.buttonUnselectedColour = (200,200,200)
+		self.buttonHighlightColour = (100,100,100)
+		self.altButtonHighlightColour = (45,181,115)
+
+		self.settingsTextColour = (35,140,90)
+		self.settingsSelectedColour = (241,102,89)
+		self.settingsUnselectedColour = (150,150,150)
+
+
+
+
 	def setSize(self, x, y, w, h):
 		self._size = (x, y, w, h)
 
@@ -309,9 +321,10 @@ class glGuiPanel(glcanvas.GLCanvas):
 				glLoadIdentity()
 				glTranslate(10, self.GetSize().GetHeight() - 10, -1)
 				glColor4f(0.2,0.2,0.2,0.5)
-				opengl.glDrawStringLeft("fps:%d" % (1 / renderTime))
+				if renderTime != 0:
+					opengl.glDrawStringLeft("fps:%d" % (1 / renderTime))
 				glTranslate(self.GetSize().GetWidth() - 80, 0, -1)
-				opengl.glDrawStringRight("file:%s" % profile.getPreference('lastfile'))
+				opengl.glDrawStringRight("file:%s" % profile.getPreference('selectedfile'))
 			self.SwapBuffers()
 		except:
 			errStr = 'An error has occurred during the 3D view drawing.'
@@ -327,14 +340,14 @@ class glGuiPanel(glcanvas.GLCanvas):
 	def _drawGui(self):
 		if self._glButtonsTexture is None:
 
-			self._glButtonsTexture = opengl.loadGLTexture('glButtons-copy-settings4.png')
-			self._glButtonsTexture2 = opengl.loadGLTexture('glButtons-copy-settings5.png')
+			self._glButtonsTexture = opengl.loadGLTexture('glButtons-sheet1.png')
+			self._glButtonsTexture2 = opengl.loadGLTexture('glButtons-sheet2.png')
 			#self._glButtonsSettingsTexture = opengl.loadGLTexture('glButtons.png')
 			#self._glRobotTexture = opengl.loadGLTexture('tinkersuite2.png')
 			#self._glBlackBoxTexture = opengl.loadGLTexture('black_square.png')
 			
 			#self._glLittoTexture = opengl.loadGLTexture('litto_label.png')
-			self._glSuiteTexture = opengl.loadGLTexture('Logo_suite.png')
+			self._glSuiteTexture = opengl.loadGLTexture(_('Logo_suite.png'))
 			
 			self._glSettingBorder = opengl.loadGLTexture('setting_border_large.png')
 			self._glSettingBorder2 = opengl.loadGLTexture('setting_border_small.png')
@@ -344,7 +357,7 @@ class glGuiPanel(glcanvas.GLCanvas):
 			self._glScaleTexture = opengl.loadGLTexture('scale_border.png')
 			self._glRotateTexture = opengl.loadGLTexture('rotate_border.png')
 			
-			self._glSDTexture = opengl.loadGLTexture('sd_border.png')
+			self._glSDTexture = opengl.loadGLTexture('sd_border2.png')
 		
 		glDisable(GL_DEPTH_TEST)
 		glEnable(GL_BLEND)
@@ -538,11 +551,11 @@ class glGuiPanel(glcanvas.GLCanvas):
 		progress = self._progressBar
 		if progress is not None:
 			bs = 64
-			pos = (115,385)
+			pos = (115,325)
 			glColor4ub(60,60,60,255)
 
 			size = self.GetSize()
-			y = float(size.GetHeight())/2 + (1.5 * bs * 1.2) - bs/2
+			y = float(size.GetHeight())/2 + (0.5 * bs * 1.2) - bs/2
 			
 			
 			opengl.glDrawQuad(pos[0]-bs/2, y, bs, bs / 3)
@@ -572,7 +585,7 @@ class glGuiPanel(glcanvas.GLCanvas):
 			#	x = 624
 			
 			glTranslate(x, size.GetHeight() - 20,0)
-			glScale(362,183,100)
+			glScale(362,195,100)
 			glBegin(GL_QUADS)
 			glTexCoord2f(1, 0)
 			glVertex2f(0,-1)
@@ -735,7 +748,7 @@ class glGuiLayoutGrid(object):
 		return self._size
 
 class glButton(glGuiControl):
-	def __init__(self, parent, imageID, tooltipTitle, tooltip, pos, callback, Xnudge = 0, Ynudge = 0, size = None, center = "none"):
+	def __init__(self, parent, imageID, tooltipTitle, tooltip, pos, callback, Xnudge = 0, Ynudge = 0, size = None, center = "none", useAltHighlightColour = False):
 		self._buttonSize = size
 		self._hidden = False
 		super(glButton, self).__init__(parent, pos)
@@ -754,7 +767,8 @@ class glButton(glGuiControl):
 		self._Ynudge = Ynudge
 		self._glDittoTexture = None
 		self._center = center
-		self._titleTextColour = (139,197,63)
+		self._useAltHighlightColour = useAltHighlightColour
+
 		self._tooltipNudgeX = 0
 		self._tooltipNudgeY = 0
 		
@@ -762,13 +776,13 @@ class glButton(glGuiControl):
 		
 		self._extraHitbox = None
 		
-		self._tooltipTextTitle = tooltipText.tooltipText(20, 130, self._tooltipTitle, "font.ttf", 24, self._titleTextColour) #(43,182,115)
+		self._tooltipTextTitle = tooltipText.tooltipText(20, 130, self._tooltipTitle, "font.ttf", 24, self.buttonTitleTextColour) #(43,182,115)
 		if self._tooltipTitle == "ABORT":
 			self._tooltipTextTitle._colour = (255,0,0)
 		self._tooltipTextTitle.makeText()
 		#self.oldtextTitle = self._tooltipTextTitle._text
 		
-		self._tooltipText = tooltipText.tooltipText(20, 145, self._tooltip, "font.ttf", 16, (self.colour3)) #(43,182,115) (39,167,105) 
+		self._tooltipText = tooltipText.tooltipText(20, 145, self._tooltip, "font.ttf", 16, (self.buttonTooltipTextColour)) #(43,182,115) (39,167,105)
 		self._tooltipText.makeText()
 		self.oldtext = self._tooltipText._text
 		
@@ -838,16 +852,21 @@ class glButton(glGuiControl):
 		#	glColor4ub(255,255,255,255)
 			
 		scale = 0.9
+
+
+
 		if self._selected:
-			#scale = 0.9
-			glColor4ub(249,48,71,255)
+			glColor3ub(*self.buttonSelectedColour)
 		elif self._focus and self._highlight:
 			if self._imageID != 9:#not the upper left logo
-				glColor4ub(43,222,115,255)
+				if self._useAltHighlightColour != False:
+					glColor3ub(*self.altButtonHighlightColour)
+				else:
+					glColor3ub(*self.buttonHighlightColour)
 			else:
-				glColor4ub(255,0,0,255)
+				glColor3ub(0,0,0)
 		else:
-			glColor4ub(200,200,200,255)
+			glColor3ub(*self.buttonUnselectedColour)
 		#opengl.glDrawTexturedQuad(self._Xnudge+pos[0]-bs*scale/2, self._Ynudge + pos[1]-bs*scale/2, bs*scale, bs*scale, 0)
 		opengl.glDrawTexturedQuad(self._Xnudge+pos[0]-bs*scale/2, self._Ynudge + pos[1]-bs*scale/2, bs*scale, bs*scale, self._imageID)
 		if self._showExpandArrow:
@@ -1695,7 +1714,7 @@ class glButtonSetting(glGuiControl):
 		if self._advanced == True and self._parent.advancedOpen == False:
 			return
 		if self._advanced == False and self._parent.advancedOpen == False:
-			self._Ynudge = self._default_Ynudge - 70
+			self._Ynudge = self._default_Ynudge - self.YnudgeModifer
 		elif self._advanced == None: #only for the advancedTabButton. No matter what it's position is -70.
 			self._Ynudge = self._default_Ynudge - 70
 		else:
@@ -1720,17 +1739,20 @@ class glButtonSetting(glGuiControl):
 			glColor4ub(255,255,255,156)
 			
 		scale = 1
+
+
+
 		if self._selected:
 			scale = 1
-			glColor4ub(249,48,71,255)
+			glColor3ub(*self.settingsSelectedColour)
 		elif self._focus:
 			#scale = 0.9
 			if self._imageID != 21:#not the upper left logo
 				#glColor4ub(43,222,115,255)
 				glColor4ub(255,255,255,255)
-			glColor4ub(110,110,110,255)
+			glColor3ub(*self.buttonSelectedColour)
 		else:
-			glColor4ub(150,150,150,255)
+			glColor3ub(*self.settingsUnselectedColour)
 		#opengl.glDrawTexturedQuad(self._Xnudge+pos[0]-bs*scale/2, self._Ynudge + pos[1]-bs*scale/2, bs*scale, bs*scale, 0)
 		opengl.glDrawTexturedQuad(pos[0]-bs*scale/2, pos[1]-bs*scale/2, bs*scale, bs*scale, self._imageID)
 		#print pos[1]-bs*scale/2
@@ -1921,11 +1943,11 @@ class glCameraRadioButtonSetting(glRadioButton):
 			
 		scale = 1
 		if self._selected:
-			glColor4ub(249,48,71,255)
+			glColor3ub(*self.altButtonHighlightColour)
 		elif self._focus:
-			glColor4ub(43,222,115,255)
+			glColor3ub(*self.altButtonHighlightColour)
 		else:
-			glColor4ub(200,200,200,255)
+			glColor3ub(*self.buttonUnselectedColour)
 		#opengl.glDrawTexturedQuad(self._Xnudge+pos[0]-bs*scale/2, self._Ynudge + pos[1]-bs*scale/2, bs*scale, bs*scale, 0)
 		opengl.glDrawTexturedQuad(pos[0]-bs*scale/2, pos[1]-bs*scale/2, bs*scale, bs*scale, self._imageID)
 		if self._showExpandArrow:
@@ -2089,7 +2111,7 @@ class glViewmodeRadioButtonSetting(glRadioButtonSetting):
 		glPopMatrix()
 
 class glTextLabelSetting(glGuiControl):
-	def __init__(self, parent, tooltip, pos, Xnudge = 0, Ynudge = 0, fontSize = 12, advanced = False, colour = (50,50,50)):
+	def __init__(self, parent, tooltip, pos, Xnudge = 0, Ynudge = 0, fontSize = 12, advanced = False, colour = None):
 		self._fontSize = fontSize
 		#self._buttonSize = size
 		self._hidden = False
@@ -2108,7 +2130,10 @@ class glTextLabelSetting(glGuiControl):
 		self._Ynudge = Ynudge
 		self._default_Ynudge = Ynudge
 		self._glDittoTexture = None
-		self._colour = colour
+		if colour != None:
+			self._colour = colour
+		else:
+			self._colour = self.settingsTextColour
 		self.loaded = False
 		
 		self._oldText = None
@@ -2183,7 +2208,7 @@ class glTextLabelSetting(glGuiControl):
 		if self._advanced == True and self._parent.advancedOpen == False:
 			return
 		if self._advanced == False and self._parent.advancedOpen == False:
-			self._Ynudge = self._default_Ynudge - 70
+			self._Ynudge = self._default_Ynudge - self.YnudgeModifer
 		else:
 			self._Ynudge = self._default_Ynudge
 		#cx = (self._imageID % 4) / 4

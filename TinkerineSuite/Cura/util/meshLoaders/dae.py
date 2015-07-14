@@ -15,6 +15,7 @@ class daeLoader(object):
 		self.obj = mesh.printableObject(os.path.basename(filename))
 		self.mesh = self.obj._addMesh()
 
+
 		r = ParserCreate()
 		r.StartElementHandler = self._StartElementHandler
 		r.EndElementHandler = self._EndElementHandler
@@ -161,3 +162,5 @@ class daeLoader(object):
 			if item[basename]['_'+key] == value:
 				return self._idMap[item[input]['_source']]
 			basename += "!"
+	def getMinimumZ(self):
+		return self.mesh.getMinimumZ()

@@ -15,16 +15,22 @@ from Cura.gui import firmwareInstall
 from Cura.gui import sceneView
 from Cura.gui.util import dropTarget
 from Cura.gui.tools import minecraftImport
+from Cura.util import gcodeInterpreter
 from Cura.util import validators
 from Cura.util import profile
 from Cura.util import version
 from Cura.util import meshLoader
 from Cura.util import machineCom
+from Cura.util.resources import getPathForImage
 
 class mainWindow(wx.Frame):
 	def __init__(self):
-		super(mainWindow, self).__init__(None, title='Tinkerine Suite - ' + version.getVersion())
+		super(mainWindow, self).__init__(None, title=_('Tinkerine Suite - ') + version.getVersion())
 		#super(mainWindow, self).__init__(None, title='Cura - ' + version.getVersion(),style=wx.DEFAULT_FRAME_STYLE & wx.NO_BORDER & ~wx.SYSTEM_MENU)
+
+
+		ico = wx.Icon(getPathForImage(_('../suite.ico')), wx.BITMAP_TYPE_ICO)
+		self.SetIcon(ico)
 
 		self.extruderCount = int(profile.getPreference('extruder_amount'))
 
@@ -35,7 +41,7 @@ class mainWindow(wx.Frame):
 		self.normalModeOnlyItems = []
 
 		mruFile = os.path.join(profile.getBasePath(), 'mru_filelist.ini')
-		self.config = wx.FileConfig(appName="Tinkerine Suite",
+		self.config = wx.FileConfig(appName=_("Tinkerine Suite"),
 						localFilename=mruFile,
 						style=wx.CONFIG_USE_LOCAL_FILE)
 						
@@ -51,11 +57,11 @@ class mainWindow(wx.Frame):
 
 		self.menubar = wx.MenuBar()
 		self.fileMenu = wx.Menu()
-		i = self.fileMenu.Append(-1, 'Load model file...\tCTRL+L')
+		i = self.fileMenu.Append(-1, _('Load model file...\tCTRL+L'))
 		self.Bind(wx.EVT_MENU, lambda e: self.scene.showLoadModel(), i)
-		i = self.fileMenu.Append(-1, 'Save model...\tCTRL+S')
+		i = self.fileMenu.Append(-1, _('Save model...\tCTRL+S'))
 		self.Bind(wx.EVT_MENU, lambda e: self.scene.showSaveModel(), i)
-		i = self.fileMenu.Append(-1, 'Clear platform')
+		i = self.fileMenu.Append(-1, _('Clear platform'))
 		self.Bind(wx.EVT_MENU, lambda e: self.scene.OnDeleteAll(e), i)
 
 		#self.fileMenu.AppendSeparator()
@@ -88,7 +94,7 @@ class mainWindow(wx.Frame):
 
 		# Model MRU list
 		modelHistoryMenu = wx.Menu()
-		self.fileMenu.AppendMenu(wx.NewId(), "&Recent Model Files", modelHistoryMenu)
+		self.fileMenu.AppendMenu(wx.NewId(), _("&Recent Model Files"), modelHistoryMenu)
 		self.modelFileHistory.UseMenu(modelHistoryMenu)
 		self.modelFileHistory.AddFilesToMenu()
 		self.Bind(wx.EVT_MENU_RANGE, self.OnModelMRU, id=self.ID_MRU_MODEL1, id2=self.ID_MRU_MODEL10)
@@ -101,9 +107,9 @@ class mainWindow(wx.Frame):
 		#self.Bind(wx.EVT_MENU_RANGE, self.OnProfileMRU, id=self.ID_MRU_PROFILE1, id2=self.ID_MRU_PROFILE10)
 		
 		self.fileMenu.AppendSeparator()
-		i = self.fileMenu.Append(wx.ID_EXIT, 'Quit')
+		i = self.fileMenu.Append(wx.ID_EXIT, _('Quit'))
 		self.Bind(wx.EVT_MENU, self.OnQuit, i)
-		self.menubar.Append(self.fileMenu, '&File')
+		self.menubar.Append(self.fileMenu, _('&File'))
 
 		#toolsMenu = wx.Menu()
 		#i = toolsMenu.Append(-1, 'Switch to quickprint...')
@@ -123,7 +129,7 @@ class mainWindow(wx.Frame):
 
 		expertMenu = wx.Menu()
 		if version.isDevVersion():
-			i = expertMenu.Append(-1, 'Open expert settings...')
+			i = expertMenu.Append(-1, _('Open expert settings...'))
 			self.normalModeOnlyItems.append(i)
 			self.Bind(wx.EVT_MENU, self.OnExpertOpen, i)
 			expertMenu.AppendSeparator()
@@ -131,7 +137,7 @@ class mainWindow(wx.Frame):
 		if firmwareInstall.getDefaultFirmware() is not None:
 			i = expertMenu.Append(-1, 'Install default Marlin firmware')
 			self.Bind(wx.EVT_MENU, self.OnDefaultMarlinFirmware, i)
-		i = expertMenu.Append(-1, 'Install custom firmware')
+		i = expertMenu.Append(-1, _('Install custom firmware'))
 		self.Bind(wx.EVT_MENU, self.OnCustomFirmware, i)
 		#expertMenu.AppendSeparator()
 		#i = expertMenu.Append(-1, 'Run first run wizard...')
@@ -141,18 +147,18 @@ class mainWindow(wx.Frame):
 		#if self.extruderCount > 1:
 		#	i = expertMenu.Append(-1, 'Run head offset wizard...')
 		#	self.Bind(wx.EVT_MENU, self.OnHeadOffsetWizard, i)
-		self.menubar.Append(expertMenu, 'Expert') #DEBUG
+		self.menubar.Append(expertMenu, 'Advanced') #DEBUG
 
 		helpMenu = wx.Menu()
 		#i = helpMenu.Append(-1, 'Online documentation...')
 		#self.Bind(wx.EVT_MENU, lambda e: webbrowser.open('http://daid.github.com/Cura'), i)
 		#i = helpMenu.Append(-1, 'Report a problem...')
-		#self.Bind(wx.EVT_MENU, lambda e: webbrowser.open('https://github.com/daid/Cura/issues'), i)
+		#self.Bind(wx.EVT_MENU, lambda e: webbrowser.open('https://github.com/daid/Cura/issues'), i)sdf
 		#i = helpMenu.Append(-1, 'Check for update...')
 		#self.Bind(wx.EVT_MENU, self.OnCheckForUpdate, i)
-		i = helpMenu.Append(-1, 'About Tinkerine Suite')
+		i = helpMenu.Append(-1, _('About Tinkerine Suite'))
 		self.Bind(wx.EVT_MENU, self.OnAbout, i)
-		self.menubar.Append(helpMenu, 'About')
+		self.menubar.Append(helpMenu, _('About'))
 		self.SetMenuBar(self.menubar)
         
 
@@ -164,13 +170,18 @@ class mainWindow(wx.Frame):
 		self.rightPane = wx.Panel(self, style=wx.BORDER_NONE)
 		#self.splitter.Bind(wx.EVT_SPLITTER_DCLICK, lambda evt: evt.Veto())
 
+		# wx.BeginBusyCursor()
+
+
+
+		# self.rightPane.SetCursor(self.defaultCursor)
 		##Gui components##
 		#self.simpleSettingsPanel = simpleMode.simpleModePanel(self.leftPane, lambda : self.scene.sceneUpdated())
 		self.normalSettingsPanel = normalSettingsPanel(self, lambda : self.scene.sceneUpdated())
 		#self.abuttonthing = wx.Button(self.splitter2,2,"<", size=(15,100))
 		#self.abuttonthing.Bind(wx.EVT_BUTTON,self.changeMode)
 		#self.abuttonthing = wx.Button(self.splitter2,2,">")
-		
+
 		
 		self.leftSizer = wx.BoxSizer(wx.HORIZONTAL)
 		#self.leftSizer.Add(self.abuttonthing,1)
@@ -294,7 +305,6 @@ class mainWindow(wx.Frame):
 		#if len(files) > 0:
 			#profile.setPluginConfig([])
 			#self.updateProfileToControls()
-
 		profile.putPreference('lastFile', files[0])
 		gcodeFilename = None
 		for filename in files:
@@ -303,20 +313,19 @@ class mainWindow(wx.Frame):
 			if ext == 'G' or ext == 'GCODE':
 				gcodeFilename = filename
 		if gcodeFilename is not None:
-			if self._gcode is not None:
-				self._gcode = None
-				for layerVBOlist in self._gcodeVBOs:
+			if self.scene._gcode is not None:
+				self.scene._gcode = None
+				for layerVBOlist in self.scene._gcodeVBOs:
 					for vbo in layerVBOlist:
-						self.glReleaseList.append(vbo)
-				self._gcodeVBOs = []
-			self._gcode = gcodeInterpreter.gcode()
-			self._gcodeFilename = gcodeFilename
-			#print self._gcodeFilename
-			self.printButton.setBottomText('')
-			self.setModelView(4)
-			self.printButton.setDisabled(False)
-			self.OnSliceDone(gcodeFilename)
-			self.OnViewChange()
+						self.scene.glReleaseList.append(vbo)
+				self.scene._gcodeVBOs = []
+			self.scene._gcode = gcodeInterpreter.gcode()
+			self.scene._gcodeFilename = gcodeFilename
+			self.scene.printButton.setBottomText('')
+			self.scene.setModelView(4)
+			self.scene.printButton.setDisabled(False)
+			self.scene.OnSliceDone(gcodeFilename)
+			self.scene.OnViewChange()
 		else:
 			if self.scene.getModelView() == 4:
 				self.scene.setModelView(0)
@@ -427,7 +436,7 @@ class mainWindow(wx.Frame):
 		firmwareInstall.InstallFirmware()
 
 	def OnCustomFirmware(self, e):
-		dlg=wx.FileDialog(self, "Open firmware to upload", os.path.split(profile.getPreference('lastFile'))[0], style=wx.FD_OPEN|wx.FD_FILE_MUST_EXIST)
+		dlg=wx.FileDialog(self, _("Open firmware to upload"), os.path.split(profile.getPreference('lastFile'))[0], style=wx.FD_OPEN|wx.FD_FILE_MUST_EXIST)
 		dlg.SetWildcard("HEX file (*.hex)|*.hex;*.HEX")
 		if dlg.ShowModal() == wx.ID_OK:
 			filename = dlg.GetPath()
@@ -458,6 +467,13 @@ class mainWindow(wx.Frame):
 		mi.Centre()
 		mi.Show(True)
 
+	def setCursorToBusy(self):
+		wx.BeginBusyCursor()
+
+	def setCursorToDefault(self):
+		if wx.IsBusy():
+			wx.EndBusyCursor()
+
 	def OnCheckForUpdate(self, e):
 		newVersion = version.checkForNewerVersion()
 		if newVersion is not None:
@@ -468,11 +484,11 @@ class mainWindow(wx.Frame):
 
 	def OnAbout(self, e):
 		info = wx.AboutDialogInfo()
-		info.SetName('Tinkerine Suite')
-		info.SetDescription('Plating, Preparing and Slicing for Fused Filament Fabrication 3D printing.')
-		info.SetWebSite('http://www.tinkerine.com')
-		info.SetCopyright('Copyright (C) Tinkerine')
-		info.SetLicence("""
+		info.SetName(_('Tinkerine Suite'))
+		info.SetDescription(_('\t[up][up][down][down][left][right][left][right][B][A][Enter]\nPlating, Preparing and Slicing for Fused Filament Fabrication 3D printing.'))
+		info.SetWebSite(_('http://www.tinkerine.com'))
+		info.SetCopyright(_('Copyright (C) Tinkerine'))
+		info.SetLicence(_("""
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU Affero General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
@@ -485,7 +501,7 @@ class mainWindow(wx.Frame):
 
     You should have received a copy of the GNU Affero General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
-""")
+"""))
 		wx.AboutBox(info)
 
 	def OnClose(self, e):

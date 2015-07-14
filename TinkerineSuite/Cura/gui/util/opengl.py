@@ -150,6 +150,7 @@ class GLVBO(GLReferenceCounter):
 			else:
 				glBufferData(GL_ARRAY_BUFFER, self._asdf, GL_STATIC_DRAW)
 			glBindBuffer(GL_ARRAY_BUFFER, 0)
+
 	def refresh(self):
 		self._buffer = glGenBuffers(1)
 		self._size = len(self._asdf)
@@ -159,6 +160,7 @@ class GLVBO(GLReferenceCounter):
 		else:
 			glBufferData(GL_ARRAY_BUFFER, self._asdf, GL_STATIC_DRAW)
 		glBindBuffer(GL_ARRAY_BUFFER, 0)
+
 	def render(self, render_type = GL_TRIANGLES):
 		glEnableClientState(GL_VERTEX_ARRAY)
 		if self._buffer is None:
@@ -166,6 +168,8 @@ class GLVBO(GLReferenceCounter):
 			if self._hasNormals:
 				glEnableClientState(GL_NORMAL_ARRAY)
 				glNormalPointer(GL_FLOAT, 0, self._normalArray)
+
+
 		else:
 			glBindBuffer(GL_ARRAY_BUFFER, self._buffer)
 			if self._hasNormals:
@@ -180,7 +184,7 @@ class GLVBO(GLReferenceCounter):
 		extraCount = self._size - extraStartPos
 	
 		for i in xrange(0, int(self._size / batchSize)):
-			
+
 			glDrawArrays(render_type, i * batchSize, batchSize)
 		#glColor3ub(1, 50, 50) #skirt
 		glDrawArrays(render_type, extraStartPos, extraCount)

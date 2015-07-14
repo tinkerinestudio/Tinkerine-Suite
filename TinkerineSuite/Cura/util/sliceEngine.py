@@ -52,7 +52,10 @@ class Slicer(object):
 		self._progressSteps = ['inset', 'skin', 'export']
 		self._objCount = 0
 		self._sliceLog = []
-		self._printTimeSeconds = None
+		#self._printTimeSeconds = None
+		self._totalMoveTimeMinute = None
+		self._basicSettings = []
+		self._extrusionAmount = None
 		self._filamentMM = None
 		self._modelHash = None
 		self.extruderOffset = [
@@ -207,7 +210,7 @@ class Slicer(object):
 		#Restore the old profile.
 		profile.resetTempOverride()
 		
-		self._pspw = ProjectSliceProgressWindow(actionList, resultFilename, sceneView)
+		self._pspw = ProjectSliceProgressWindow(self, actionList, resultFilename, sceneView)
 		self._pspw.extruderOffset = self.extruderOffset
 		self._pspw.Centre()
 
@@ -446,8 +449,9 @@ class Slicer(object):
 				output.addVertex(v0[0], v0[1], v0[2])
 		stl2.saveAsSTL(output, filename)
 class ProjectSliceProgressWindow(wx.Frame):
-	def __init__(self, actionList, resultFilename, sceneView):
+	def __init__(self, parent, actionList, resultFilename, sceneView):
 		super(ProjectSliceProgressWindow, self).__init__(None, title='Building')
+		self.parent = parent
 		self.SetBackgroundColour(wx.SystemSettings.GetColour(wx.SYS_COLOUR_BTNFACE))
 		self.sceneView = sceneView
 		self.actionList = actionList
@@ -521,7 +525,10 @@ class ProjectSliceProgressWindow(wx.Frame):
 		
 				maxValue = 1
 				while(len(line) > 0):
+					if len(line) > 0:
+						print line
 					line = line.rstrip()
+
 					if line[0:9] == "Progress[" and line[-1:] == "]":
 						progress = line[9:-1].split(":")
 						if len(progress) > 2:
@@ -534,16 +541,28 @@ class ProjectSliceProgressWindow(wx.Frame):
 						except:
 							pass
 					if self.abort:
-						
 						self.sceneView._isSlicing = False
 						p.terminate()
 						wx.CallAfter(self.statusText.SetLabel, "Aborted by user.")
-						
 						resultFile.close()
 						self.Close()
 						return
 					line = p.stdout.readline()
 				self.returnCode = p.wait()
+
+
+				if self.returnCode != 0:
+					self.sceneView._isSlicing = False
+					try:
+						os.remove(self.resultFilename + "_temp_.stl")
+					except:
+						pass
+					dial = wx.MessageDialog(None, 'An Error occurred during slicing. Try checking the model for errors, lowering the resolution or print settings and try slicing again.', 'Error encountered during Slicing', wx.OK|wx.ICON_EXCLAMATION)
+					dial.ShowModal()
+					resultFile.close()
+					self.sceneView.setCursorToDefault()
+					self.Close()
+					return
 			
 			put('object_center_x', action.centerX - self.extruderOffset[action.extruder][0])
 			put('object_center_y', action.centerY - self.extruderOffset[action.extruder][1])
@@ -615,7 +634,12 @@ class ProjectSliceProgressWindow(wx.Frame):
 		cost = gcode.calculateCost()
 		if cost != False:
 			status += "\nCost: %s" % (cost)
-		#profile2.replaceGCodeTags(self.resultFilename, gcode)
+		profile.replaceGCodeTags(self.resultFilename, gcode)
+
+		self.parent._totalMoveTimeMinute = gcode.totalMoveTimeMinute
+		self.parent._extrusionAmount = gcode.extrusionAmount
+		self.parent._basicSettings = gcode.basicSettings
+
 		wx.CallAfter(self.statusText.SetLabel, status)
 		#self._thread = threading.Thread(target=self.OnSliceDone(self.resultFilename))# start_new(wx.CallAfter(self.OnSliceDone(self.resultFilename)))
 		#wx.CallAfter(self._thread.start())

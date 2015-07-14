@@ -1,2 +1,1 @@
-@python\python.exe -m Cura.tinkerinesuite %*
-
+@.\python\python.exe -m Cura.tinkerinesuite %*

@@ -41,11 +41,14 @@ class SceneView(openglGui.glGuiPanel):
 	def __init__(self, parent):
 		super(SceneView, self).__init__(parent)
 
+		self.varitronicsBrandString = "varitronics"
+
 		self.list = []
-		
+
 		self._konamCode = []
-		
+
 		self.debug = False
+		self.busyInfo = None
 
 		self._scene = objectScene.Scene()
 		self._gcode = None
@@ -61,124 +64,122 @@ class SceneView(openglGui.glGuiPanel):
 		self._mouseX = -1
 		self._mouseY = -1
 		self._mouseState = None
-		
+
 		self._yaw = -20
 		self._pitch = 59
 		self._zoom = 339
 		self._viewTarget = numpy.array([0,0,0], numpy.float32)
-		
+
 		self._animView = None
 		self._animZoom = None
 		self._platformditto = meshLoader.loadMeshes(resources.getPathForMesh('ditto+.stl'))[0]##
 		self._platformditto._drawOffset = numpy.array([40,0,0], numpy.float32)
-		
+
 		self._platformlitto = meshLoader.loadMeshes(resources.getPathForMesh('litto4.stl'))[0]##
 		self._platformlitto._drawOffset = numpy.array([40,0,0], numpy.float32)
-		
-		self._platformdittopro = meshLoader.loadMeshes(resources.getPathForMesh('DittoPro3.stl'))[0]##
+
+		self._platformdittopro = meshLoader.loadMeshes(resources.getPathForMesh(_('DittoPro3.stl')))[0]##
 		self._platformdittopro._drawOffset = numpy.array([40,0,0], numpy.float32)
-		
+
 		self._isSimpleMode = True
 
 		self._isSlicing = False
-		
+
+		self._anObjectIsOutsidePlatform = False
+
 		self._viewport = None
 		self._modelMatrix = None
 		self._projMatrix = None
 		self.tempMatrix = None
-		
+
 		self._degree = unichr(176)
-		
+
 		self.cameraMode = 'default'
-		
+
 		self.settingsOpen = False
 		self.cameraOpen = False
 		self.viewmodeOpen = False
-		
+
 		self.advancedOpen = False
-		
+
 		self.saveMenuOpen = False
-		
+
 		self.rotationLock = True
-		
+
 		self.supportLines = []
 		#self.trimList = numpy.zeros((0,3), numpy.float32)
 		self.trimList = []
 		self.trimList2 = []
-		
-		
+
+
 		self.scaleList = []
 		self.rotateList = []
 		self.viewModeList = []
 		self.cameraList = []
-		
+
 		self.resultFilename = ""
-		
-		self.textColour = (0,144,75)
-		
-		#self.changeMachineButton      = openglGui.glButton(self, 1, '', '', (0,0), self.changeMachine, -20,0)
 
-		self.openFileButton      = openglGui.glButton(self, 23, 'IMPORT', 'Add an object to the build platform', (0,-1.5), self.showLoadModel, 0, 0, None, "left")
-		self.settingsButton      = openglGui.glButton(self, 24, 'SETTINGS', 'Edit Slicing Settings', (0,-0.5), self.showSettings, 0, 0, None, "left")
-		self.deleteButton      = openglGui.glButton(self, 25, 'DELETE', 'Delete selected model', (0,0.5), self.deleteSelection, 0, 0, None, "left")
-		self.printButton         = openglGui.glButton(self, 26, 'SLICE', 'Slice current build platform', (0,1.5), self.OnPrintButton, 0, 0, None, "left")
+		self.openFileButton      = openglGui.glButton(self, 23, _('IMPORT'), _('Add an object to the build platform'), (0,-1.5), self.showLoadModel, 0, 0, None, "left")
+		self.settingsButton      = openglGui.glButton(self, 24, _('SETTINGS'), _('Edit Slicing Settings'), (0,-0.5), self.showSettings, 0, 0, None, "left")
+		#self.deleteButton      = openglGui.glButton(self, 25, 'DELETE', _('Delete selected model'), (0,0.5), self.deleteSelection, 0, 0, None, "left")
+		self.printButton         = openglGui.glButton(self, 26, _('SLICE'), _('Slice current build platform'), (0,0.5), self.OnPrintButton, 0, 0, None, "left")
 
-		self.abortButton         = openglGui.glButton(self, 10, 'ABORT', '', (2.7,1.6), self.OnAbortButton, 0, 0, 40, "left")
+		self.abortButton         = openglGui.glButton(self, 10, _('ABORT'), '', (2.7,0.6), self.OnAbortButton, 0, 0, 40, "left")
 		self.abortButton._tooltipNudgeX = -10
 		self.abortButton._tooltipNudgeY = 5
-		
+
 		#print self.abortButton._tooltipTextTitle._colour
-			
+
 		group = []
 		group6 = []
 		#self.cameraButton      = openglGui.glButton(self, 26, 'Camera', (8,-1), self.OnToolSelect)
-		self.cameraButton  = openglGui.glRadioButton(self, 20, 'CAMERA VIEW', '', (-1.5,-1), group, self.showCamera, 0, 0, None, 1, "bottom")
-		self.moveButton      = openglGui.glRadioButton(self, 21, 'MODEL VIEW', '', (-0.5,-1), group, self.showViewmode, 0, 0, None, 1, "bottom")
-		self.changeModeButton  = openglGui.glRadioButton(self, 22, 'PRINT ', '', (-30,-1), group6, self.OnToolSelect, 0, 0, None, 1, "bottom")
-		self.rotateToolButton = openglGui.glRadioButton(self, 19, 'ROTATE ', '', (0.5,-1), group, self.showRotate, 0, 0, None, 1, "bottom")
-		self.scaleToolButton  = openglGui.glRadioButton(self, 18, 'SCALE ', '', (1.5,-1), group, self.showScale, 0, 0, None, 1, "bottom")
-		
+		self.cameraButton  = openglGui.glRadioButton(self, 20, _('CAMERA VIEW'), '', (-1.5,-1), group, self.showCamera, 0, 0, None, 1, "bottom")
+		self.moveButton      = openglGui.glRadioButton(self, 21, _('MODEL VIEW'), '', (-0.5,-1), group, self.showViewmode, 0, 0, None, 1, "bottom")
+		self.changeModeButton  = openglGui.glRadioButton(self, 22, _('PRINT '), '', (-30,-1), group6, self.OnToolSelect, 0, 0, None, 1, "bottom")
+		self.rotateToolButton = openglGui.glRadioButton(self, 19, _('ROTATE '), '', (0.5,-1), group, self.showRotate, 0, 0, None, 1, "bottom")
+		self.scaleToolButton  = openglGui.glRadioButton(self, 18, _('SCALE '), '', (1.5,-1), group, self.showScale, 0, 0, None, 1, "bottom")
+
 		#self.mirrorToolButton  = openglGui.glRadioButton(self, 10, 'Mirror', (1,-1), group, self.OnToolSelect)
 
-		self.resetRotationButton = openglGui.glButton(self, 30, '', '', (-0.88,-1.85), self.OnRotateReset, 0, -2, 45, "bottom")
-		self.layFlatButton       = openglGui.glButton(self, 31, '', '', (0.35,-1.85), self.OnLayFlat, 0, -2, 45, "bottom")
+		self.resetRotationButton = openglGui.glButton(self, 30, '', '', (-0.88,-1.85), self.OnRotateReset, 0, -2, 45, "bottom", True)
+		self.layFlatButton       = openglGui.glButton(self, 31, '', '', (0.35,-1.85), self.OnLayFlat, 0, -2, 45, "bottom", True)
 		self.resetRotationButton._extraHitbox = (-30,67,-30,30)
 		self.layFlatButton._extraHitbox = (-30,67,-30,30)
-		
-		self.sdSaveButton = openglGui.glButton(self, 35, '', '', (1.1,-1.7), self.OnCopyToSD, 0, -2, 100)
+
+		self.sdSaveButton = openglGui.glButton(self, 35, '', '', (1.1,-2), self.OnCopyToSD, 0, -2, 100)
 		self.sdSaveButton._hidden = True
-		
-		self.sdEjectButton = openglGui.glButton(self, 36, '', '', (2,-1.7), self.OnSafeRemove, 0, -2, 35)
+
+		self.sdEjectButton = openglGui.glButton(self, 36, '', '', (2,-2), self.OnSafeRemove, 0, -2, 35)
 		self.sdEjectButton._hidden = True
-		
-		
-		self.directorySaveButton       = openglGui.glButton(self, 22, '', '', (3.8,-1.7), self.OnCopyToDirectory, 0, -2, 100)
+
+
+		self.directorySaveButton       = openglGui.glButton(self, 22, '', '', (3.8,-2), self.OnCopyToDirectory, 0, -2, 100)
 		self.directorySaveButton._hidden = True
-		
-		self.closeSaveButton       = openglGui.glButton(self, 15, '', '', (5.0,-2.6), self.CloseSavePrompt, 0, -2, 30)
+
+		self.closeSaveButton       = openglGui.glButton(self, 15, '', '', (5.0,-2.8), self.CloseSavePrompt, 0, -2, 30)
 		self.closeSaveButton._hidden = True
 
-		
-		self.saveText       = openglGui.glLabel(self, 'Choose Save Destination', (3.0,-2.8), 18, (139,197,63))
+
+		self.saveText       = openglGui.glLabel(self, _('Choose Save Destination'), (3.0,-3), 18, (139,197,63))
 		self.saveText._hidden = True
-		
+
 		self.saveStatusText      = openglGui.glLabel(self, '', (3.0,-1.2), 18, (139,197,63))
 		self.saveStatusText._hidden = True
-		
-		
+
+		self.printTimeEstimationText      = openglGui.glLabel(self, '', (2.75,-1.55), 18, (139,197,63))
+		self.printTimeEstimationText._hidden = True
+
 		#resetRotationLabel = openglGui.glLabel(self, 'RESET', (-0.21,-2.06))
 		#self.rotateList.append(resetRotationLabel)
 		#layLabel = openglGui.glLabel(self, 'LAY', (1.02,-2.13))
 		#self.rotateList.append(layLabel)
 		#flatLabel = openglGui.glLabel(self, 'FLAT', (1.04,-1.98))
 		#self.rotateList.append(flatLabel)
-		
+
 		#self.resetRotationButton._tooltipTextTitle.mode = "follow"
-		
+
 		#reset rotation
 
-		self.profileCounter = "Ditto+"
-		
 		self.infillPlusCounter = 0
 		self.infillMinusCounter = 0
 		self.infillCounter = int(profile.getProfileSettingFloat('fill_density'))
@@ -190,70 +191,75 @@ class SceneView(openglGui.glGuiPanel):
 		self.speedCounter = int(profile.getProfileSettingFloat('print_speed'))
 		self.temperatureCounter = int(profile.getProfileSettingFloat('print_temperature'))
 		self.temperaturebedCounter = int(profile.getProfileSettingFloat('print_bed_temperature'))
-		
-		#self.supportCounter = int(profile.getProfileSettingFloat('support')) #TODO: fix and use this properly! not an int!
+
+		#self.supportCounter = int(profile.getProfileSettingFloat('support'))
 		#self.vaseCounter = int(profile.getProfileSettingFloat('vase'))
-		
-		
-		
+
 		self.mirrorXButton       = openglGui.glButton(self, 14, '', 'Mirror X', (1,-3), lambda button: self.OnMirror(0))
 		self.mirrorYButton       = openglGui.glButton(self, 18, '', 'Mirror Y', (2,-3), lambda button: self.OnMirror(1))
 		self.mirrorZButton       = openglGui.glButton(self, 22, '', 'Mirror Z', (3,-3), lambda button: self.OnMirror(2))
 
-		self.decreaseInfillButton       = openglGui.glButtonSetting(self, 8, '', (0,0), self.decreaseInfill, 40,145, 56, 0.4)
-		self.increaseInfillButton       = openglGui.glButtonSetting(self, 9, '', (0,0), self.increaseInfill, 100,145, 56, 0.4)
-		
-		self.decreaseFilamentButton       = openglGui.glButtonSetting(self, 8, '', (0,0), self.decreaseFilament, 240,145, 56, 0.4)
-		self.increaseFilamentButton       = openglGui.glButtonSetting(self, 9, '', (0,0), self.increaseFilament, 310,145, 56, 0.4)
-		
-		self.decreaseWallThicknessButton       = openglGui.glButtonSetting(self, 8, '', (0,0), self.decreaseWallThickness, 40,110, 56, 0.4, True)
-		self.IncreaseWallThicknessButton       = openglGui.glButtonSetting(self, 9, '', (0,0), self.increaseWallThickness, 100,110, 56, 0.4, True)
-		
-		self.decreaseSupportButton       = openglGui.glButtonSetting(self, 8, '', (0,0), self.decreaseSupport, 240,101, 56, 0.35, True)
-		self.IncreaseSupportButton       = openglGui.glButtonSetting(self, 9, '', (0,0), self.increaseSupport, 310,101, 56, 0.35, True)
-		
-		self.decreasePrintSpeedButton       = openglGui.glButtonSetting(self, 8, '', (0,0), self.decreasePrintSpeed, 35,73, 56, 0.4, True)
-		self.increasePrintSpeedButton       = openglGui.glButtonSetting(self, 9, '', (0,0), self.increasePrintSpeed, 106,73, 56, 0.4, True)
-		
-		self.decreaseTemperatureButton       = openglGui.glButtonSetting(self, 8, '', (0,0), self.decreaseTemperature, 218,73, 56, 0.4, True)
-		self.increaseTemperatureButton       = openglGui.glButtonSetting(self, 9, '', (0,0), self.increaseTemperature, 282,73, 56, 0.4, True)
-		
+		group2 = []
+		if version.getBrand() == "varitronics":
+			self.dittoProButton       = openglGui.glRadioButtonSetting(self, 72, '', (0,1), group2, self.changeToDittoPro, 80,235, 60, 0.6)
+		else:
+			self.littoButton       = openglGui.glRadioButtonSetting(self, 1, '', (0,1), group2, self.changeToLitto, 80,235, 60, 0.6)
+			self.dittoButton       = openglGui.glRadioButtonSetting(self, 2, '', (0,2), group2, self.changeToDitto, 120,235, 60, 0.6)
+			self.dittoProButton       = openglGui.glRadioButtonSetting(self, 3, '', (0,3), group2, self.changeToDittoPro, 160,235, 60, 0.6)
+
+		group3 = []
+		self.lowResButton      = openglGui.glRadioButtonSetting(self, 4, '', (0,1), group3, self.lowResolution, 80,196, 60, 0.6)
+		self.medResButton      = openglGui.glRadioButtonSetting(self, 5, '', (0,2), group3, self.medResolution, 120,196, 60, 0.6)
+		self.highResButton      = openglGui.glRadioButtonSetting(self, 6, '', (0,3), group3, self.highResolution, 160,196, 60, 0.6)
+		self.ultraResButton      = openglGui.glRadioButtonSetting(self, 7, '', (0,4), group3, self.ultraResolution, 200,196, 60, 0.6)
+
+		self.decreaseInfillButton       = openglGui.glButtonSetting(self, 8, '', (0,0), self.decreaseInfill, 40,160, 56, 0.4)
+		self.increaseInfillButton       = openglGui.glButtonSetting(self, 9, '', (0,0), self.increaseInfill, 115,160, 56, 0.4)
+
+		self.decreaseFilamentButton       = openglGui.glButtonSetting(self, 8, '', (0,0), self.decreaseFilament, 240,160, 56, 0.4)
+		self.increaseFilamentButton       = openglGui.glButtonSetting(self, 9, '', (0,0), self.increaseFilament, 310,160, 56, 0.4)
+
+		self.decreaseWallThicknessButton       = openglGui.glButtonSetting(self, 8, '', (0,0), self.decreaseWallThickness, 40,125, 56, 0.4, True)
+		self.IncreaseWallThicknessButton       = openglGui.glButtonSetting(self, 9, '', (0,0), self.increaseWallThickness, 115,125, 56, 0.4, True)
+
+		group1 = []
+		self.brimOnButton =  openglGui.glRadioButtonSetting(self, 73, 'Helps bed adhesion by having the skirt touch the object', (0,1), group1, self.brimOn, 274,124, 40, 0.6, True)
+		self.brimOffButton =  openglGui.glRadioButtonSetting(self, 69, '', (0,2), group1, self.brimOff, 241,124, 40, 0.6, True)
+
+		self.decreaseTemperatureButton       = openglGui.glButtonSetting(self, 8, '', (0,0), self.decreaseTemperature, 40,97, 56, 0.4, True)
+		self.increaseTemperatureButton       = openglGui.glButtonSetting(self, 9, '', (0,0), self.increaseTemperature, 115,97, 56, 0.4, True)
+
+		group33 = []
+		self.supportOffButton      = openglGui.glRadioButtonSetting(self, 37, '', (0,1), group33, self.supportOff, 241,97, 40, 0.6, True)
+		self.supportExtButton      = openglGui.glRadioButtonSetting(self, 38, _('Build support only on the Exterior of the object'), (0,2), group33, self.supportExt, 275,97, 40, 0.6, True)
+		self.supportAllButton      = openglGui.glRadioButtonSetting(self, 39, _('Build support everywhere it needs'), (0,3), group33, self.supportAll, 309,97, 40, 0.6, True)
+
+		self.decreaseSupportButton       = openglGui.glButtonSetting(self, 8, '', (0,0), self.decreaseSupport, 240,78, 56, 0.35, True)
+		self.IncreaseSupportButton       = openglGui.glButtonSetting(self, 9, '', (0,0), self.increaseSupport, 310,78, 56, 0.35, True)
+
+		self.decreasePrintSpeedButton       = openglGui.glButtonSetting(self, 8, '', (0,0), self.decreasePrintSpeed, 40,78, 56, 0.4, True)
+		self.increasePrintSpeedButton       = openglGui.glButtonSetting(self, 9, '', (0,0), self.increasePrintSpeed, 115,78, 56, 0.4, True)
+
 		#self.decreaseBedTemperatureButton       = openglGui.glButtonSetting(self, 8, '', (0,0), self.decreaseBedTemperature, 210,64, 56, 0.4, True)
 		#self.increaseBedTemperatureButton       = openglGui.glButtonSetting(self, 7, '', (0,0), self.increaseBedTemperature, 285,64, 56, 0.4, True)
 
-		self.closeButton       = openglGui.glButtonSetting(self, 15, '', (0,0), self.showSettings, 344,247, 30, 0.65)
-		self.saveButton       = openglGui.glButtonSetting(self, 34, 'Save Settings', (0,0), self.saveSettings, 322,247, 30, 0.65)
-		self.advancedTabButton       = openglGui.glButtonSetting(self, 17, '', (0,0), lambda button: self.showAdvancedSettings(self.advancedTabButton), 160,133, 24, 1.0, None)
-		
-			
-		#self.supportOnOffButton       = openglGui.glButtonSetting(self, 9, '', (0,0), lambda button: self.supportOnOff(self.supportOnOffButton), 255,118, 45, 0.7, True)
-		#if profile.getProfileSetting('support') == 'None':
-		#	self.supportOnOffButton.setImageID(9)
-		#else:
-		#	self.supportOnOffButton.setImageID(10)
-			
+		self.closeButton       = openglGui.glButtonSetting(self, 15, '', (0,0), self.showSettings, 344,259, 30, 0.65)
+		self.saveButton       = openglGui.glButtonSetting(self, 34, _('Save Settings'), (0,0), self.saveSettings, 322,259, 30, 0.65)
+		self.advancedTabButton       = openglGui.glButtonSetting(self, 17, '', (0,0), lambda button: self.showAdvancedSettings(self.advancedTabButton), 160,131, 24, 1.0, None)
+
+
+		if profile.getProfileSetting('skirt_gap') != '0':
+			self.brimOffButton.setSelected(True)
+		else:
+			self.brimOnButton.setSelected(True)
+
 		#self.vaseOnOffButton       = openglGui.glButtonSetting(self, 9, '', (0,0), lambda button: self.vaseOnOff(self.vaseOnOffButton), 255,100, 45, 0.7, True)
 		#if profile.getProfileSetting('vase') == 'False':
 		#	self.vaseOnOffButton.setImageID(9)
 		#else:
 		#	self.vaseOnOffButton.setImageID(10)
-		
-		group2 = []
-		self.littoButton       = openglGui.glRadioButtonSetting(self, 1, '', (0,1), group2, self.changeToLitto, 80,220, 60, 0.6)
-		self.dittoButton       = openglGui.glRadioButtonSetting(self, 2, '', (0,2), group2, self.changeToDitto, 120,220, 60, 0.6)
-		self.dittoProButton       = openglGui.glRadioButtonSetting(self, 3, '', (0,3), group2, self.changeToDittoPro, 160,220, 60, 0.6)
 
-		group3 = []
-		self.lowResButton      = openglGui.glRadioButtonSetting(self, 4, '', (0,1), group3, self.lowResolution, 80,183, 60, 0.6)
-		self.medResButton      = openglGui.glRadioButtonSetting(self, 5, '', (0,2), group3, self.medResolution, 120,183, 60, 0.6)
-		self.highResButton      = openglGui.glRadioButtonSetting(self, 6, '', (0,3), group3, self.highResolution, 160,183, 60, 0.6)
-		self.ultraResButton      = openglGui.glRadioButtonSetting(self, 7, '', (0,4), group3, self.ultraResolution, 200,183, 60, 0.6)
 
-		group33 = []
-		self.supportOffButton      = openglGui.glRadioButtonSetting(self, 37, '', (0,1), group33, self.supportOff, 241,119, 40, 0.6, True)
-		self.supportExtButton      = openglGui.glRadioButtonSetting(self, 38, 'Build support only on the Exterior of the object', (0,2), group33, self.supportExt, 275,119, 40, 0.6, True)
-		self.supportAllButton      = openglGui.glRadioButtonSetting(self, 39, 'Build support everywhere it needs', (0,3), group33, self.supportAll, 309,119, 40, 0.6, True)
-		
 		group4 = []
 		self.cameraDefaultButton  = openglGui.glCameraRadioButtonSetting(self, 14, (-10,1.89), group4, self.cameraDefault, -104,0, 40, 'camera')
 		self.cameraFrontButton  = openglGui.glCameraRadioButtonSetting(self, 13, (-11,1.89), group4, self.cameraFront, -36,0, 40, 'camera')
@@ -261,7 +267,7 @@ class SceneView(openglGui.glGuiPanel):
 		self.cameraTopButton     = openglGui.glCameraRadioButtonSetting(self, 11, (-13,1.89), group4, self.cameraTop, 102,0, 40, 'camera')
 
 		#self.cameraTopButton       = openglGui.glButton(self, 12, 'Top View', 'aaaaaaaa', (0.7,-1.75), self.cameraTop, 0, -2, 40, "bottom")
-		
+
 		group5 = []
 		self.modelViewButton     = openglGui.glCameraRadioButtonSetting(self, 27, (-10,1.885), group5, lambda button: self.setModelView(0), -128, 0, 40, 'viewmode')
 		self.overhangViewButton    = openglGui.glCameraRadioButtonSetting(self, 29, (-11,1.885), group5, lambda button: self.setModelView(1), -24, 0,40, 'viewmode')
@@ -275,32 +281,38 @@ class SceneView(openglGui.glGuiPanel):
 		#self.viewModeList.append(supportViewLabel)
 		#layerViewLabel = openglGui.glLabel(self, 'LAYER', (1.75,-2.06))
 		#self.viewModeList.append(layerViewLabel)
-		
-		
+
+
 		#self.profileLabelText       = openglGui.glTextLabelSetting(self, "PROFILE", (0,4), -12,213, 11, False)
-		
-		if profile.getPreferenceFloat('machine_width') == 130: #litto width
-			currentMachineString = "Litto 3D Printer"
-			self.littoButton.setSelected(True)
-		elif profile.getPreferenceFloat('machine_width') == 210: #ditto width
-			currentMachineString = "Ditto+ 3D Printer"
-			self.dittoButton.setSelected(True)
-		else:
-			currentMachineString = "DittoPro 3D Printer"
+		if version.getBrand() == "varitronics":
+			currentMachineString = _("DittoPro 3D Printer")
 			self.dittoProButton.setSelected(True)
-		self.machineText       = openglGui.glTextLabelSetting(self, currentMachineString, (0,4), 230,211, 12, False, (self.textColour))
-		
+			profile.putPreference('machine_width', '219')
+			profile.putPreference('machine_depth', '165')
+			profile.putPreference('machine_height', '219')
+		else:
+			if profile.getPreferenceFloat('machine_width') == 130: #litto width
+				currentMachineString = _("Litto 3D Printer")
+				self.littoButton.setSelected(True)
+			elif profile.getPreferenceFloat('machine_width') == 210: #ditto width
+				currentMachineString = _("Ditto+ 3D Printer")
+				self.dittoButton.setSelected(True)
+			else:
+				currentMachineString = _("DittoPro 3D Printer")
+				self.dittoProButton.setSelected(True)
+		self.machineText       = openglGui.glTextLabelSetting(self, currentMachineString, (0,4), 230,225, 12, False)
+
 		if profile.getProfileSettingFloat('layer_height') == 0.3:
-			resolutionString = "Low: 300 micron"
+			resolutionString = _("Low: 300 micron")
 			self.lowResButton.setSelected(True)
 		elif profile.getProfileSettingFloat('layer_height') == 0.2:
-			resolutionString = "Medium: 200 micron"
+			resolutionString = _("Medium: 200 micron")
 			self.medResButton.setSelected(True)
 		elif profile.getProfileSettingFloat('layer_height') == 0.1:
-			resolutionString = "High: 100 micron"
+			resolutionString = _("High: 100 micron")
 			self.highResButton.setSelected(True)
 		else:
-			resolutionString = "Ultra: 50 micron"
+			resolutionString = _("Ultra: 50 micron")
 			self.ultraResButton.setSelected(True)
 
 		if profile.getProfileSetting('support') == 'None':
@@ -309,13 +321,13 @@ class SceneView(openglGui.glGuiPanel):
 			self.supportExtButton.setSelected(True)
 		else:
 			self.supportAllButton.setSelected(True)
-			
+
 		#self.resolutionLabelText       = openglGui.glTextLabelSetting(self, "RESOLTUION", (0,4), -12,176, 11, False)
-		self.resolutionText       = openglGui.glTextLabelSetting(self, resolutionString, (0,4), 230,174, 12, False, (self.textColour))
+		self.resolutionText       = openglGui.glTextLabelSetting(self, resolutionString, (0,4), 230,188, 12, False)
 
 		#self.infillLabelText       = openglGui.glTextLabelSetting(self, "INFILL", (0,4), -12,138, 11, False)
 		infillString = str(int(profile.getProfileSettingFloat('fill_density'))) + '%'
-		self.infillText       = openglGui.glTextLabelSetting(self, infillString, (0,4), 61,137, 12, False, (self.textColour))
+		self.infillText       = openglGui.glTextLabelSetting(self, infillString, (0,4), 65,152, 12, False)
 		###
 		if self.debug:
 			self.xText       = openglGui.glTextLabelSetting(self, "X:", (0,4), 375,220, 12, False, (0,0,0))
@@ -323,42 +335,42 @@ class SceneView(openglGui.glGuiPanel):
 			self.zText       = openglGui.glTextLabelSetting(self, "Z:", (0,4), 375,160, 12, False, (0,0,0))
 		#print self.infillText.getTooltip()
 		#self.infillText.setTooltip('wowoow database')
-		
+
 		#self.filamentLabelText       = openglGui.glTextLabelSetting(self, "FILAMENT", (0,4), 175,139, 11, False)
-		filamentString = str(profile.getProfileSettingFloat('filament_diameter'))
-		self.filamentText       = openglGui.glTextLabelSetting(self, filamentString, (0,4), 262,138, 12, False, (self.textColour))
-		
+		filamentString = str(profile.getProfileSettingFloat(_('filament_diameter')))
+		self.filamentText       = openglGui.glTextLabelSetting(self, filamentString, (0,4), 263,152, 12, False)
+
 		#self.shellLabelText       = openglGui.glTextLabelSetting(self, "WALLS", (0,4), -12,103, 11, True)
-		shellString = str(int(profile.getProfileSettingFloat('wall_thickness')))
-		self.shellText       = openglGui.glTextLabelSetting(self, shellString, (0,4), 67,102, 12, True, (self.textColour))
-		
+		shellString = str(int(profile.getProfileSettingFloat(_('wall_thickness'))))
+		self.shellText       = openglGui.glTextLabelSetting(self, shellString, (0,4), 73,117, 12, True)
+
 		#self.shellLabelText       = openglGui.glTextLabelSetting(self, "WALLS", (0,4), -12,103, 11, True)
-		supportString = str(int(profile.getProfileSettingFloat('support_angle'))) + self._degree 
-		self.supportText       = openglGui.glTextLabelSetting(self, supportString, (0,4), 267,93, 12, True, (self.textColour))
-		
+		supportString = str(int(profile.getProfileSettingFloat(_('support_angle')))) + self._degree
+		self.supportText       = openglGui.glTextLabelSetting(self, supportString, (0,4), 267,70, 12, True)
+
 		#self.speedLabelText       = openglGui.glTextLabelSetting(self, "SPEED", (0,4), -12,66, 11, True)
-		speedString = str(int(profile.getProfileSettingFloat('print_speed'))) + "mm/s"
-		self.speedText       = openglGui.glTextLabelSetting(self, speedString, (0,4), 50,65, 12, True, (self.textColour))
-		
+		speedString = str(int(profile.getProfileSettingFloat(_('print_speed')))) + _("mm/s")
+		self.speedText       = openglGui.glTextLabelSetting(self, speedString, (0,4), 54,70, 12, True)
+
 		#self.temperatureLabelText       = openglGui.glTextLabelSetting(self, "TEMP", (0,4), 172,67, 11, True)
-		
+
 		#self.tempLabelText       = openglGui.glTextLabelSetting(self, "Hotend", (0,4), 300,74, 11, True)
-		temperatureString = str(int(profile.getProfileSettingFloat('print_temperature'))) + self._degree + "C"
-		self.temperatureText       = openglGui.glTextLabelSetting(self, temperatureString, (0,4), 233,65, 12, True, (self.textColour))
-		
+		temperatureString = str(int(profile.getProfileSettingFloat(_('print_temperature')))) + self._degree + _("C")
+		self.temperatureText       = openglGui.glTextLabelSetting(self, temperatureString, (0,4), 60,88, 12, True)
+
 		#self.bedtempLabelText       = openglGui.glTextLabelSetting(self, "Bed", (0,4), 300,57, 11, True)
 		#bedtemperatureString = str(int(profile.getProfileSettingFloat('print_bed_temperature'))) + self._degree + "C"
 		#self.bedTemperatureText       = openglGui.glTextLabelSetting(self, bedtemperatureString, (0,4), 233,56, 12, True, (self.textColour))
 
 		#self.supportLabelText       = openglGui.glTextLabelSetting(self, "SUPPORT", (0,4), 175,110, 11, True)
 		#self.vaseLabelText       = openglGui.glTextLabelSetting(self, "VASE", (0,4), 300,200, 11, False)
-		
-		
-		self.savedLabel = openglGui.glTextLabelSetting(self, "*Settings Saved*", (0,4), 180,244, 16, False)
+
+
+		self.savedLabel = openglGui.glTextLabelSetting(self, _("*Settings Saved*"), (0,4), 180,260, 16, False)
 		self.savedLabel._timer = 0
-		
+
 		#print self.testButton._Xnudge
-#	def __init__(self, parent, imageID, tooltip, callback, Xnudge = 0, Ynudge = 0, size = None):
+		#	def __init__(self, parent, imageID, tooltip, callback, Xnudge = 0, Ynudge = 0, size = None):
 
 		#self.rotateToolButton.setExpandArrow(True)
 		#self.scaleToolButton.setExpandArrow(True)
@@ -366,21 +378,21 @@ class SceneView(openglGui.glGuiPanel):
 
 		self.scaleForm = openglGui.glFrame(self, (13, -1))
 		openglGui.glGuiLayoutGrid(self.scaleForm)
-		
 
-		
+
+
 		#widthLabel = openglGui.glLabel(self, 'WIDTH', (-1.32,-2.25))
 		#self.scaleList.append(widthLabel)
-		
+
 		#depthLabel = openglGui.glLabel(self, 'DEPTH', (-0.25,-2.25))
 		#self.scaleList.append(depthLabel)
-		
+
 		#heightLabel = openglGui.glLabel(self, 'HEIGHT', (.8,-2.25))
 		#self.scaleList.append(heightLabel)
-		
+
 		#uniformLabel = openglGui.glLabel(self, 'UNIFORM', (1.99,-2.58))
 		#self.scaleList.append(uniformLabel)
-		
+
 		#scalingLabel = openglGui.glLabel(self, 'SCALING', (2.00,-2.43))
 		#self.scaleList.append(scalingLabel)
 
@@ -389,34 +401,34 @@ class SceneView(openglGui.glGuiPanel):
 
 		self.scaleXctrl = openglGui.glNumberCtrl(self, '0', (-1.59,-2.17), lambda value: self.OnScaleEntry(value, 0), True)
 		self.scaleList.append(self.scaleXctrl)
-		
+
 		self.scaleYctrl = openglGui.glNumberCtrl(self, '0', (-0.50,-2.17), lambda value: self.OnScaleEntry(value, 1), True)
 		self.scaleList.append(self.scaleYctrl)
-		
+
 		self.scaleZctrl = openglGui.glNumberCtrl(self, '0', (0.55,-2.17), lambda value: self.OnScaleEntry(value, 2), True)
 		self.scaleList.append(self.scaleZctrl)
-		
+
 		self.scaleXmmctrl = openglGui.glNumberCtrl(self, '0.0', (-1.5,-1.69), lambda value: self.OnScaleEntryMM(value, 0))
 		self.scaleList.append(self.scaleXmmctrl)
-		
+
 		self.scaleYmmctrl = openglGui.glNumberCtrl(self, '0.0', (-0.41,-1.69), lambda value: self.OnScaleEntryMM(value, 1))
 		self.scaleList.append(self.scaleYmmctrl)
-		
+
 		self.scaleZmmctrl = openglGui.glNumberCtrl(self, '0.0', (0.64,-1.69), lambda value: self.OnScaleEntryMM(value, 2))
 		self.scaleList.append(self.scaleZmmctrl)
-		
-		self.resetScaleButton = openglGui.glButton(self, 30, '', '', (1.34,-1.84), self.OnScaleReset, 0, -2, 45, "bottom")
+
+		self.resetScaleButton = openglGui.glButton(self, 30, '', '', (1.34,-1.84), self.OnScaleReset, 0, -2, 45, "bottom", True)
 		self.scaleList.append(self.resetScaleButton)
 		self.resetScaleButton._extraHitbox = (-27,75,-19,19)
-		
-		self.rotationLockButton = openglGui.glButton(self, 32, '', '', (1.34,-2.37), lambda button: self.OnRotationLock(self.rotationLockButton), 0, -2, 45, "bottom")
+
+		self.rotationLockButton = openglGui.glButton(self, 32, '', '', (1.34,-2.37), lambda button: self.OnRotationLock(self.rotationLockButton), 0, -2, 45, "bottom", True)
 		self.rotationLockButton._extraHitbox = (-27,75,-19,19)
-		
+
 		self.scaleUniform = openglGui.glCheckbox(self.scaleForm, True, (1,8), None)
 
 		#self.resetScaleButton    = openglGui.glButton(self, 13, '', 'Reset', (17,7), self.OnScaleReset,0,0,32)
 		self.scaleMaxButton      = openglGui.glButton(self, 17, '', 'To max', (2,-2), self.OnScaleMax)
-				
+
 		#self.layFlatButton       = openglGui.glButton(self, 31, '', '', (1.3,-1.75), self.OnLayFlat, 0, -2, 40, "bottom")
 
 		self.modelView = 0
@@ -442,17 +454,6 @@ class SceneView(openglGui.glGuiPanel):
 	def getModelView(self):
 		return self.modelView
 
-	def changeMachine(self, e):
-		if profile.getPreferenceFloat('machine_width') == 130: #litto width
-			profile.putPreference('machine_width', '210')
-			profile.putPreference('machine_depth', '180')
-			profile.putPreference('machine_height', '230')
-		else:
-			profile.putPreference('machine_width', '130')
-			profile.putPreference('machine_depth', '120')
-			profile.putPreference('machine_height', '175')
-		self.sceneUpdated()
-		self.updateProfileToControls()
 	def showSettings(self, e):
 		#print "Yaw: " + str(self._yaw)
 		#print "Pitch: " + str(self._pitch)
@@ -528,7 +529,7 @@ class SceneView(openglGui.glGuiPanel):
 		
 	def showLoadModel(self, button = 1):
 		if button == 1:
-			dlg=wx.FileDialog(self, 'Open 3D model', os.path.split(profile.getPreference('lastFile'))[0], style=wx.FD_OPEN|wx.FD_FILE_MUST_EXIST|wx.FD_MULTIPLE)
+			dlg=wx.FileDialog(self, _('Open 3D model'), os.path.split(profile.getPreference('lastFile'))[0], style=wx.FD_OPEN|wx.FD_FILE_MUST_EXIST|wx.FD_MULTIPLE)
 			dlg.SetWildcard(meshLoader.loadWildcardFilter() + "|GCode file (*.gcode)|*.g;*.gcode;*.G;*.GCODE")
 			if dlg.ShowModal() != wx.ID_OK:
 				dlg.Destroy()
@@ -570,9 +571,13 @@ class SceneView(openglGui.glGuiPanel):
 				if self.getModelView() == 4:
 					self.setModelView(0)
 					self.OnViewChange()
-				self.loadScene(filenames)
+				try:
+					self.loadScene(filenames)
+				except:
+					pass
 
 	def testgcodeload(self,filename):
+		self.busyInfo = wx.BusyInfo(_("loading gcode... please wait..."), self)
 		gcodeFilename = filename
 		self.supportLines = []
 		if self._gcode is not None:
@@ -583,31 +588,47 @@ class SceneView(openglGui.glGuiPanel):
 				self._gcodeVBOs = []
 		self._gcode = gcodeInterpreter.gcode()
 		self._gcodeFilename = gcodeFilename
+
+		if self._slicer._totalMoveTimeMinute != None:
+			self._gcode.totalMoveTimeMinute = self._slicer._totalMoveTimeMinute
+			self._gcode.extrusionAmount = self._slicer._extrusionAmount
+			self._gcode.basicSettings = self._slicer._basicSettings
+			self._slicer._totalMoveTimeMinute = None
+
+		else:
+			self._gcode.load(filename)
 		#print self._gcodeFilename
 		self.printButton.setBottomText('')
 		self.setModelView(4)
 		self.printButton.setDisabled(False)
 		self.OnViewChange()
+		self.busyInfo = None
+
 	def showSaveModel(self):
 		if len(self._scene.objects()) < 1:
 			return
 		defPath = profile.getPreference('lastFile')
 		defPath = defPath[0:defPath.rfind('.')] + '_export' + '.stl'
 		
-		dlg=wx.FileDialog(self, 'Save 3D model', os.path.split(profile.getPreference('lastFile'))[0], defPath, style=wx.FD_SAVE|wx.FD_OVERWRITE_PROMPT)
+		dlg=wx.FileDialog(self, _('Save 3D model'), os.path.split(profile.getPreference('lastFile'))[0], defPath, style=wx.FD_SAVE|wx.FD_OVERWRITE_PROMPT)
 		dlg.SetWildcard(meshLoader.saveWildcardFilter())
 		if dlg.ShowModal() != wx.ID_OK:
 			dlg.Destroy()
 			return
 		filename = dlg.GetPath()
 		dlg.Destroy()
+		busyInfo = wx.BusyInfo(_("Saving model(s), please wait..."), self)
 		meshLoader.saveMeshes(filename, self._scene.objects())
+		busyInfo.Destroy()
 
 	def OnPrintButton(self, button):
 		if len(self._scene.objects()) < 1:
 			return
 		if self.getProgressBar() is not None:
 			return
+		if not self._anObjectIsOutsidePlatform:
+			return
+		self.setModelView(0)
 		defPath = profile.getPreference('lastFile')
 		defPath = defPath[0:defPath.rfind('.')] + '.g'
 		
@@ -621,6 +642,9 @@ class SceneView(openglGui.glGuiPanel):
 		#dlg.Destroy()
 		self.saveSettings(button)
 		self._isSlicing = True
+
+		self.setCursorToBusy()
+
 		self._slicer.runSlicer(self._scene.objects(), resultFilename, self)
 		self.setProgressBar(0.001)
 		self.abortButton._hidden = False
@@ -668,7 +692,16 @@ class SceneView(openglGui.glGuiPanel):
 			# self.Bind(wx.EVT_MENU, lambda e: self._showSliceLog(), menu.Append(-1, 'Slice engine log...'))
 			# self.PopupMenu(menu)
 			# menu.Destroy()
-			
+
+	def setCursorToBusy(self):
+		mainWindow = self.GetParent().GetParent()
+		mainWindow.setCursorToBusy()
+
+	def setCursorToDefault(self):
+		mainWindow = self.GetParent().GetParent()
+		mainWindow.setCursorToDefault()
+
+
 	def OnAbortButton(self, button):
 		#self.setProgressBar(None)
 		self.abortButton._hidden = True
@@ -677,6 +710,7 @@ class SceneView(openglGui.glGuiPanel):
 			self._slicer._pspw.OnAbort(button)
 		except:
 			print "abort failed"
+		self.setCursorToDefault()
 		#self.setProgressBar(None)
 		
 	def showPrintWindow(self):
@@ -689,7 +723,7 @@ class SceneView(openglGui.glGuiPanel):
 	def showSaveGCode(self):
 		defPath = profile.getPreference('lastFile')
 		defPath = defPath[0:defPath.rfind('.')] + '.gcode'
-		dlg=wx.FileDialog(self, 'Save toolpath', defPath, style=wx.FD_SAVE)
+		dlg=wx.FileDialog(self, _('Save toolpath'), defPath, style=wx.FD_SAVE)
 		dlg.SetFilename(self._scene._objectList[0].getName())
 		dlg.SetWildcard('Toolpath (*.gcode)|*.gcode;*.g')
 		if dlg.ShowModal() != wx.ID_OK:
@@ -705,15 +739,25 @@ class SceneView(openglGui.glGuiPanel):
 		self.setProgressBar(None)
 		self.saveMenuOpen = True
 		self.sdSaveButton._hidden = False
+		self.setCursorToDefault()
 		#self.sdEjectButton._hidden = False
 		self.directorySaveButton._hidden = False
 		self.closeSaveButton._hidden = False
 		self.saveText._hidden = False
 		self.saveStatusText._hidden = False
 		self.saveStatusText._label = ""
+		self.printTimeEstimationText._label = "Est. Print time - %02dh:%02dm | Weight: %.2fg" % (int(self._gcode.totalMoveTimeMinute / 60), int(self._gcode.totalMoveTimeMinute % 60), self._gcode.calculateWeight()*1000)
+		if version.isDevVersion():
+			for settingPair in self._gcode.basicSettings:
+				try:
+					self.saveStatusText._label += settingPair
+				except:
+					pass
+  		self.printTimeEstimationText._hidden = False
 		self.resultFilename = resultFilename
 		self.settingsOpen = False
 		#text = "Would you like to copy the sliced file to SD card: [" + profile.getPreference('sdpath') + "]?"
+
 		
 	def OnCopyToSD(self, e):
 		if profile.getPreference('sdpath') != '':
@@ -725,7 +769,7 @@ class SceneView(openglGui.glGuiPanel):
 				self.saveStatusText._label = str(filename) + " saved to [" + str(profile.getPreference('sdpath')) +"]"
 			except:
 				print "could not save to sd card"
-				self.saveStatusText._label = "Unable to save to SD Card"
+				self.saveStatusText._label = _("Unable to save to SD Card")
 			
 	def getShortFilename(self,filename):
 		ext = filename[filename.rfind('.'):]
@@ -735,23 +779,24 @@ class SceneView(openglGui.glGuiPanel):
 	def OnCopyToDirectory(self, e):
 		filename = os.path.basename(self.resultFilename)
 		#print self.resultFilename
-		dlg=wx.FileDialog(self, "Save project gcode file", os.path.split(self.resultFilename)[0], filename, style=wx.FD_SAVE)
+		dlg=wx.FileDialog(self, _("Save project gcode file"), os.path.split(self.resultFilename)[0], filename, style=wx.FD_SAVE)
 		dlg.SetWildcard("GCode file (*.g, *.gcode)|*.g;*.gcode;*.G;*.GCODE")
 		if dlg.ShowModal() != wx.ID_OK:
 			dlg.Destroy()
 			return
 		path = dlg.GetPath()
+		print path
 		#self.resultFilename = dlg.GetPath()
 		#resultFilename = defPath
 		dlg.Destroy()
 		try:
 			shutil.copy(self.resultFilename, path)
-			self.saveStatusText._label = filename + " saved to directory"
+			self.saveStatusText._label = dlg.GetFilename() + _(" saved to directory")
 			print "copied " + filename + " into directory"
 		except shutil.Error:
 			traceback.print_exc()
 			#print "could not shutil the file: " + path + " to directory"
-			self.saveStatusText._label = "File Already Exists in Directory"
+			self.saveStatusText._label = _("File Already Exists in Directory")
 			#print 'My exception occurred, value:', e.value
 			
 	def OnSafeRemove(self, e):
@@ -759,10 +804,10 @@ class SceneView(openglGui.glGuiPanel):
 		try:
 			if len(removableStorage.getPossibleSDcardDrives()) != 0 and profile.getPreference('sdpath'):
 				removableStorage.ejectDrive(profile.getPreference('sdpath'))
-				self.saveStatusText._label = "SD Card Ejected"
+				self.saveStatusText._label = _("SD Card Ejected")
 
 		except:
-			self.saveStatusText._label = "Unable to Eject SD Card"
+			self.saveStatusText._label = _("Unable to Eject SD Card")
 	def CloseSavePrompt(self, e):
 		self.saveMenuOpen = False
 		self.sdSaveButton._hidden = True
@@ -771,6 +816,7 @@ class SceneView(openglGui.glGuiPanel):
 		self.closeSaveButton._hidden = True
 		self.saveText._hidden = True
 		self.saveStatusText._hidden = True
+		self.printTimeEstimationText._hidden = True
 		self.saveStatusText._label = ""
 	def _copyFile(self, fileA, fileB, allowEject = False):
 		try:
@@ -787,7 +833,7 @@ class SceneView(openglGui.glGuiPanel):
 		except:
 			import sys
 			print sys.exc_info()
-			self.notification.message("Failed to save")
+			self.notification.message(_("Failed to save"))
 		else:
 			if allowEject:
 				self.notification.message("Saved as %s" % (fileB), lambda : self.notification.message('You can now eject the card.') if removableStorage.ejectDrive(allowEject) else self.notification.message('Safe remove failed...'))
@@ -967,6 +1013,14 @@ class SceneView(openglGui.glGuiPanel):
 		self.sceneUpdated()
 		self.updateProfileToControls()
 
+	def brimOn(self, e):
+		profile.putProfileSetting('skirt_gap', '0')
+		profile.putProfileSetting('skirt_line_count', '5')
+
+	def brimOff(self, e):
+		profile.putProfileSetting('skirt_gap', '3')
+		profile.putProfileSetting('skirt_line_count', '3')
+
 	def changeToLitto(self, e):
 		profile.putPreference('machine_width', '130')
 		profile.putPreference('machine_depth', '120')
@@ -987,17 +1041,17 @@ class SceneView(openglGui.glGuiPanel):
 		profile.putPreference('machine_width', '219')
 		profile.putPreference('machine_depth', '165')
 		profile.putPreference('machine_height', '219')
-		self.machineText.setTooltip('DittoPro 3D Printer')
+		self.machineText.setTooltip(_('DittoPro 3D Printer'))
 		self.sceneUpdated()
 		self.updateProfileToControls()
 
 	def lowResolution(self, e):
 		profile.putProfileSetting('layer_height', '0.3')
 		profile.putProfileSetting('edge_width_mm', '0.44')
-		profile.putProfileSetting('print_flow', '1')
+		profile.putProfileSetting('print_flow', '0.94')
 		profile.putProfileSetting('infill_width', '0.4')
 		profile.putProfileSetting('bridge_feed_ratio', '100')
-		profile.putProfileSetting('bridge_flow_ratio', '100')
+		profile.putProfileSetting('bridge_flow_ratio', '105')
 
 		#profile.putProfileSetting('perimeter_flow_ratio', '75')
 
@@ -1012,8 +1066,8 @@ class SceneView(openglGui.glGuiPanel):
 		profile.putProfileSetting('print_flow', '1')
 		#profile.putProfileSetting('edge_width_mm', '0.15')
 		profile.putProfileSetting('infill_width', '0.4')
-		profile.putProfileSetting('bridge_feed_ratio', '90')
-		profile.putProfileSetting('bridge_flow_ratio', '90')
+		profile.putProfileSetting('bridge_feed_ratio', '100')
+		profile.putProfileSetting('bridge_flow_ratio', '105')
 
 		#profile.putProfileSetting('perimeter_flow_ratio', '75')
 
@@ -1022,6 +1076,7 @@ class SceneView(openglGui.glGuiPanel):
 		self.resolutionText.setTooltip('Medium: 200 micron')
 		self.sceneUpdated()
 		self.updateProfileToControls()
+
 	def highResolution(self, e):
 		profile.putProfileSetting('layer_height', '0.1')
 		profile.putProfileSetting('edge_width_mm', '0.4')
@@ -1029,8 +1084,8 @@ class SceneView(openglGui.glGuiPanel):
 		#profile.putProfileSetting('edge_width_mm', '0.15') #220
 
 		profile.putProfileSetting('infill_width', '0.4')
-		profile.putProfileSetting('bridge_feed_ratio', '70')
-		profile.putProfileSetting('bridge_flow_ratio', '200')
+		profile.putProfileSetting('bridge_feed_ratio', '90')
+		profile.putProfileSetting('bridge_flow_ratio', '155')
 		
 		#profile.putProfileSetting('perimeter_flow_ratio', '75')
 		
@@ -1039,6 +1094,7 @@ class SceneView(openglGui.glGuiPanel):
 		self.resolutionText.setTooltip('High: 100 micron')
 		self.sceneUpdated()
 		self.updateProfileToControls()
+
 	def ultraResolution(self, e):
 
 		profile.putProfileSetting('layer_height', '0.05')
@@ -1048,8 +1104,8 @@ class SceneView(openglGui.glGuiPanel):
 		#profile.putProfileSetting('bottom_thickness', '0.15')
 
 		profile.putProfileSetting('infill_width', '0.4')
-		profile.putProfileSetting('bridge_feed_ratio', '70')
-		profile.putProfileSetting('bridge_flow_ratio', '210')
+		profile.putProfileSetting('bridge_feed_ratio', '90')
+		profile.putProfileSetting('bridge_flow_ratio', '150')
 		
 		#profile.putProfileSetting('perimeter_flow_ratio', '75')
 		
@@ -1307,10 +1363,11 @@ class SceneView(openglGui.glGuiPanel):
 		if self._focusObj is None:
 			return
 		obj = self._focusObj
-		dlg = wx.NumberEntryDialog(self, "How many copies do you want?", "Copies", "Multiply", 1, 1, 100)
+		dlg = wx.NumberEntryDialog(self, _("How many copies do you want?"), _("Copies"), _("Multiply"), 1, 1, 100)
 		if dlg.ShowModal() != wx.ID_OK:
 			dlg.Destroy()
 			return
+		busyInfo = wx.BusyInfo(_("working... please wait..."), self)
 		cnt = dlg.GetValue()
 		dlg.Destroy()
 		n = 0
@@ -1418,12 +1475,19 @@ class SceneView(openglGui.glGuiPanel):
 		return False
 
 	def loadScene(self, fileList):
+		self.busyInfo = wx.BusyInfo(_("loading model... please wait..."), self)
 		for filename in fileList:
 			try:
 				objList = meshLoader.loadMeshes(filename)
-			except:
+			except MemoryError:
 				traceback.print_exc()
+				dial = wx.MessageDialog(None, "The model could not be imported because it is too large. Try reducing the number of polygons/triangles and importing again.", "Error encountered during Model Import", wx.OK|wx.ICON_EXCLAMATION)
+				dial.ShowModal()
+				dial.Destroy()
+				self.busyInfo = None
+
 			else:
+				self.busyInfo = None
 				for obj in objList:
 					if self._objectLoadShader is not None:
 						obj._loadAnim = openglGui.animation(self, 0, 0, 0.1) #j
@@ -1625,7 +1689,6 @@ class SceneView(openglGui.glGuiPanel):
 		###self._mouseClick3DPos
 		#p = glReadPixels(self._mouseX, self._mouseY, 1, 1, GL_RGBA, GL_UNSIGNED_INT_8_8_8_8)[0][0] >> 8
 
-		
 		if e.ButtonDClick():
 			self._mouseState = 'doubleClick'
 		else:
@@ -1895,23 +1958,30 @@ class SceneView(openglGui.glGuiPanel):
 		#	return False
 					
 	def OnMouseUp(self, e):
+
+
+		if self._selectedObj != None:
+			profile.putPreference('selectedFile', self._selectedObj._name)
+		else:
+			profile.putPreference('selectedFile', '')
 		if e.LeftIsDown() or e.MiddleIsDown() or e.RightIsDown():
 			return
 		if self._mouseState == 'dragOrClick':
 			if e.GetButton() == 1:
 				self._selectObject(self._focusObj)
 			if e.GetButton() == 3:
+
 					menu = wx.Menu()
 					if self._focusObj is not None:
-						self.Bind(wx.EVT_MENU, lambda e: self._deleteObject(self._focusObj), menu.Append(-1, 'Delete'))
-						self.Bind(wx.EVT_MENU, self.OnMultiply, menu.Append(-1, 'Multiply'))
-						self.Bind(wx.EVT_MENU, self.OnCenter, menu.Append(-1, 'Center on platform'))
-						if self.debug:
-							self.Bind(wx.EVT_MENU, self.OnSplitObject, menu.Append(-1, 'Split'))
+						self.Bind(wx.EVT_MENU, lambda e: self._deleteObject(self._focusObj), menu.Append(-1, _('Delete')))
+						self.Bind(wx.EVT_MENU, self.OnMultiply, menu.Append(-1, _('Multiply')))
+						self.Bind(wx.EVT_MENU, self.OnCenter, menu.Append(-1, _('Center on platform')))
+						if version.isDevVersion():
+							self.Bind(wx.EVT_MENU, self.OnSplitObject, menu.Append(-1, _('Split')))
 					if self._selectedObj != self._focusObj and self._focusObj is not None and int(profile.getPreference('extruder_amount')) > 1:
 						self.Bind(wx.EVT_MENU, self.OnMergeObjects, menu.Append(-1, 'Dual extrusion merge'))
 					if len(self._scene.objects()) > 0:
-						self.Bind(wx.EVT_MENU, self.OnDeleteAll, menu.Append(-1, 'Delete all'))
+						self.Bind(wx.EVT_MENU, self.OnDeleteAll, menu.Append(-1, _('Delete all')))
 					if menu.MenuItemCount > 0:
 						self.PopupMenu(menu)
 					menu.Destroy()
@@ -1919,6 +1989,7 @@ class SceneView(openglGui.glGuiPanel):
 			self._scene.pushFree()
 			self.sceneUpdated()
 		elif self._mouseState == 'tool':
+			busyInfo = wx.BusyInfo(_("working... please wait..."), self)
 			if self.tempMatrix is not None and self._selectedObj is not None:
 				self._selectedObj.applyMatrix(self.tempMatrix)
 				self._scene.pushFree()
@@ -2088,20 +2159,20 @@ class SceneView(openglGui.glGuiPanel):
 
 		if self.sdSaveButton._focus:
 			if len(removableStorage.getPossibleSDcardDrives()) > 0:
-				self.saveText._label = "Save to SD Card: [" + str(profile.getPreference('sdpath'))+"]"
+				self.saveText._label = _("Save to SD Card: [") + str(profile.getPreference('sdpath'))+"]"
 				self.sdSaveButton._highlight = True
 			else:
-				self.saveText._label = "No SD Card Detected"
+				self.saveText._label = _("No SD Card Detected")
 				self.sdSaveButton._highlight = False
 		elif self.directorySaveButton._focus:
-			self.saveText._label = "Browse Destination"
+			self.saveText._label = _("Browse Destination")
 		elif self.sdEjectButton._focus:
 			if len(removableStorage.getPossibleSDcardDrives()) > 0:
-				self.saveText._label = "Safely eject SD card"
+				self.saveText._label = _("Safely eject SD card")
 			else:
-				self.saveText._label = "No SD Card Detected"
+				self.saveText._label = _("No SD Card Detected")
 		else:
-			self.saveText._label = "Choose Save Destination"
+			self.saveText._label = _("Choose Save Destination")
 
 		if not self._isSlicing and self.getProgressBar() is not None:
 			self.setProgressBar(None)
@@ -2265,7 +2336,7 @@ void main(void)
 
 						glColor3ub(140, 198, 63) #perimeter
 						self._gcodeVBOs[n][9].render(GL_QUADS)
-						glColor3ub(204,204,204)#not sure
+						glColor3ub(0,0,0)#not sure
 						self._gcodeVBOs[n][10].render(GL_QUADS)
 						glColor3ub(204,204,204)#not sure
 						self._gcodeVBOs[n][11].render(GL_QUADS)
@@ -2278,7 +2349,6 @@ void main(void)
 						self._gcodeVBOs[n][14].render(GL_QUADS)
 						glColor3ub(204,204,204) #skirt
 						self._gcodeVBOs[n][15].render(GL_QUADS)
-						#print self._gcodeVBOs[n][14]
 						glColor3ub(0, 0, 204)
 						self._gcodeVBOs[n][17].render(GL_QUADS)
 						glColor3ub(204,204,204)#support
@@ -2288,23 +2358,27 @@ void main(void)
 					else: #not current layer
 						glColor3ub(173, 203, 132) #perimeter
 						self._gcodeVBOs[n][0].render(GL_LINES)
-						glColor3ub(204, 204, 204)
-						self._gcodeVBOs[n][1].render(GL_LINES)
-						glColor3ub(204, 204, 204)
-						self._gcodeVBOs[n][2].render(GL_LINES)
-						glColor3ub(204, 204, 204)
-						self._gcodeVBOs[n][3].render(GL_LINES)
+						glColor3ub(0, 0, 0) #does nothing
+						#self._gcodeVBOs[n][1].render(GL_LINES)
+						glColor3ub(0, 0, 0) #does nothing
+						#self._gcodeVBOs[n][2].render(GL_LINES)
+						glColor3ub(0, 0, 0) #does nothing
+						#self._gcodeVBOs[n][3].render(GL_LINES)
 
-						glColor3ub(204, 204, 204)
+						glColor3ub(190, 190, 190) #bridge i think
 						self._gcodeVBOs[n][4].render(GL_LINES)
-						glColor3ub(255, 226, 183) #prob infill
+
+						#if n < 3:
+						glColor3ub(255, 226, 183) #infill
 						self._gcodeVBOs[n][5].render(GL_LINES)
+
+
 						glColor3ub(204, 204, 204) #skirt
 						self._gcodeVBOs[n][6].render(GL_LINES)
 
 
-						glColor3ub(255, 0, 0) #Support2
-						self._gcodeVBOs[n][8].render(GL_LINES)
+						glColor3ub(0, 0, 0) #Support2. doesn't seem to do anything
+						#self._gcodeVBOs[n][8].render(GL_LINES)
 						glColor3ub(204, 204, 204) #support
 						self._gcodeVBOs[n][7].render(GL_LINES)
 						#if len(self._gcodeVBOs[n][8]._asdf) != 0:
@@ -2326,6 +2400,7 @@ void main(void)
 				self._objectOverhangShader.setUniform('cosAngle', math.cos(math.radians(90 - 60)))
 			else:
 				self._objectShader.bind()
+			self._anObjectIsOutsidePlatform = True
 			for obj in self._scene.objects():
 				if obj._loadAnim is not None:
 					if obj._loadAnim.isDone():
@@ -2364,6 +2439,7 @@ void main(void)
 				if not self._scene.checkPlatform(obj):
 					glColor4f(0.5 * brightness, 0.5 * brightness, 0.5 * brightness, 0.8 * brightness)
 					self._renderObject(obj)
+					self._anObjectIsOutsidePlatform = False
 				else:
 					self._renderObject(obj, brightness)
 				glDisable(GL_STENCIL_TEST)
@@ -2820,6 +2896,7 @@ void main(void)
 		filamentRadius = profile.getProfileSettingFloat('filament_diameter') / 2
 		filamentArea = math.pi * filamentRadius * filamentRadius
 
+		#print layer
 		ret = []
 		for extrudeType in ['WALL-OUTER:0', 'WALL-OUTER:1', 'WALL-OUTER:2', 'WALL-OUTER:3', 'WALL-INNER', 'FILL', 'SKIRT', 'SUPPORT']:
 			if ':' in extrudeType:
@@ -2872,7 +2949,6 @@ void main(void)
 						c = numpy.concatenate((c, a[1:-1]-normal[:-1]), 1)
 
 						c = c.reshape((len(c) * 8, 3))
-
 						pointList = numpy.concatenate((pointList, b, c))
 					else:
 						pointList = numpy.concatenate((pointList, b))
@@ -2959,7 +3035,11 @@ class ProjectObject(object):
 		self.modelDisplayList = None
 		self.modelDirty = False
 
-		self.mesh.getMinimumZ()
+		try:
+			self.mesh.getMinimumZ()
+		except:
+			pass
+
 		#print self.mesh.getMinimumZ()
 		
 		self.centerX = -self.getMinimum()[0] + 5

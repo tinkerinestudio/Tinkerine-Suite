@@ -1,0 +1,4 @@
+gui\mainWindow.py
+gui\sceneView.py
+gui\splashScreen.py
+gui\util\openglGui.py

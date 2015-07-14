@@ -26,10 +26,10 @@ profileDefaultSettings = {
 	'skirt_gap': '3.0',
 	'print_speed': '70',
 	'print_flow': '1',
-	'print_temperature': '215',
+	'print_temperature': '220',
 	'first_layer_print_temperature': '220',
 	'print_bed_temperature': '70',	
-	'filament_diameter': '1.71',
+	'filament_diameter': '1.75',
 	'filament_density': '1.00',
 	'retraction_min_travel': '0.5',
 	'retraction_enable': 'true',
@@ -104,29 +104,43 @@ profileDefaultSettings = {
 	
 	'edge_width_mm': '0.44',
 	'infill_width': '0.4',
-	'bridge_feed_ratio': '90',
-	'bridge_flow_ratio': '90',
+	'bridge_feed_ratio': '100',
+	'bridge_flow_ratio': '105',
 	'perimeter_speed_ratio': '75',
 	'perimeter_flow_ratio': '75',
 	'bridge_direction': True,
 	
 	#'extruder': '0',
 }
+####Old alterationDefault####
+# alterationDefault = {
+# #######################################################################################
+# 	'start.gcode': """;Sliced {filename} at: {day} {date} {time}
+# ;Basic settings: Layer height: {layer_height} Walls: {wall_thickness} Fill: {fill_density}
+# ;Print time: {print_time}
+# ;Filament used: {filament_amount}m {filament_weight}g
+# ;Filament cost: {filament_cost}
+#
+#
+# ;G92 X0 Y0 Z0 E0         ;reset software position to front/left/z=0.0
+#
+# ;G92 E0                  ;zero the extruded length
+# ;G1 F200 E3              ;extrude 3mm of feed stock
+# ;G92 E0                  ;zero the extruded length again
+#
+# G1 Z0 E0 F2000
+# G1 X65 E7 F1500
+# G1 X8 Y2 E14 F1500
+# G92 E0
+# G1 E-3 F1000
+# """,
+
 alterationDefault = {
 #######################################################################################
 	'start.gcode': """;Sliced {filename} at: {day} {date} {time}
-;Basic settings: Layer height: {layer_height} Walls: {wall_thickness} Fill: {fill_density}
+;Basic settings:; Layer height: {layer_height} ; Walls: {wall_thickness} ; Fill: {fill_density} ; Speed: {print_speed} ; Temperature: {print_temperature} ; Filament Diameter: {filament_diameter} ; Support Structures: {support} ; Support Angle: {support_angle}
 ;Print time: {print_time}
-;Filament used: {filament_amount}m {filament_weight}g
-;Filament cost: {filament_cost}
-
-
-;G92 X0 Y0 Z0 E0         ;reset software position to front/left/z=0.0
-
-;G92 E0                  ;zero the extruded length
-;G1 F200 E3              ;extrude 3mm of feed stock
-;G92 E0                  ;zero the extruded length again
-
+;Print weight {filament_weight}g
 G1 Z0 E0 F2000
 G1 X65 E7 F1500
 G1 X8 Y2 E14 F1500
@@ -185,9 +199,10 @@ G92 E0
 preferencesDefaultSettings = {
 	'startMode': 'Normal',
 	'lastFile': os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'resources', 'example', '20mmCube (5mm tall).stl')),
-	'machine_width': '210',
-	'machine_depth': '180',
-	'machine_height': '230',
+	'selectedFile': '',
+	'machine_width': '219',
+	'machine_depth': '165',
+	'machine_height': '219',
 	
 	'machine_type': 'reprap',
 	'ultimaker_extruder_upgrade': 'False',
@@ -218,7 +233,7 @@ preferencesDefaultSettings = {
 	'window_normal_sash': '',
 	
 	'machine_center_is_zero': 'False',
-	'filament_physical_density': '1240',
+	'filament_physical_density': '1300',
 	
 	'extruder_head_size_min_x': '0.0',
 	'extruder_head_size_min_y': '0.0',
@@ -524,14 +539,19 @@ def replaceTagMatch(m):
 		return pre + '#F_COST#'
 	if pre == 'F' and tag in ['print_speed', 'retraction_speed', 'travel_speed', 'max_z_speed', 'bottom_layer_speed', 'cool_min_feedrate']:
 		f = getProfileSettingFloat(tag) * 60
+	elif tag == 'support':
+		f = getProfileSetting(tag)
 	elif isProfileSetting(tag):
 		f = getProfileSettingFloat(tag)
 	elif isPreference(tag):
 		f = getProfileSettingFloat(tag)
 	else:
 		return '%s?%s?' % (pre, tag)
-	if (f % 1) == 0:
-		return pre + str(int(f))
+	try:
+		if (f % 1) == 0:
+			return pre + str(int(f))
+	except TypeError:
+		pass
 	return pre + str(f)
 
 def replaceGCodeTags(filename, gcodeInt):
@@ -540,10 +560,10 @@ def replaceGCodeTags(filename, gcodeInt):
 	data = data.replace('#P_TIME#', ('%5d:%02d' % (int(gcodeInt.totalMoveTimeMinute / 60), int(gcodeInt.totalMoveTimeMinute % 60)))[-8:])
 	data = data.replace('#F_AMNT#', ('%8.2f' % (gcodeInt.extrusionAmount / 1000))[-8:])
 	data = data.replace('#F_WGHT#', ('%8.2f' % (gcodeInt.calculateWeight() * 1000))[-8:])
-	cost = gcodeInt.calculateCost()
-	if cost == False:
-		cost = 'Unknown'
-	data = data.replace('#F_COST#', ('%8s' % (cost.split(' ')[0]))[-8:])
+	# cost = gcodeInt.calculateCost()
+	# if cost == False:
+	# 	cost = 'Unknown'
+	# data = data.replace('#F_COST#', ('%8s' % (cost.split(' ')[0]))[-8:])
 	f.seek(0)
 	f.write(data)
 	f.close()
@@ -585,6 +605,8 @@ def getAlterationFileContents(filename):
 		#For the start code, hack the temperature and the steps per E value into it. So the temperature is reached before the start code extrusion.
 		#We also set our steps per E here, if configured.
 		#eSteps = getPreferenceFloat('steps_per_e')
+		prefix += _(';Sliced with Tinkerine Suite version ') + version.getVersion() + '\n'
+		prefix += 'M104 S220\n'
 		prefix += 'G28\n'
 		prefix += 'G90\n'
 		prefix += 'M106 S0\n'
@@ -609,7 +631,7 @@ def getAlterationFileContents(filename):
 		#prefix += 'G1 X65 E7 F2000\n'
 		#prefix += 'G1 X0 Y2 E14 F2000\n'
 		#prefix += 'G92 E0\n'
-		
+
 	elif filename == 'end.gcode':
 		#Append the profile string to the end of the GCode, so we can load it from the GCode file later.
 		#postfix = ';CURA_PROFILE_STRING:%s\n' % (getGlobalProfileString())

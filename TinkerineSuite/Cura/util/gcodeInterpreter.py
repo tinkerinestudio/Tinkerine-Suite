@@ -31,6 +31,7 @@ class gcode(object):
 		self.totalMoveTimeMinute = 0
 		self.filename = None
 		self.progressCallback = None
+		self.basicSettings = None
 	
 	def load(self, filename):
 		if os.path.isfile(filename):
@@ -71,6 +72,7 @@ class gcode(object):
 		currentExtruder = 0
 		extrudeAmountMultiply = 1.0
 		totalMoveTimeMinute = 0.0
+		totalRetractTimeMinute = 0.0
 		absoluteE = True
 		scale = 1.0
 		posAbs = True
@@ -112,6 +114,9 @@ class gcode(object):
 							gcodeFile.close()
 							return
 					currentLayer = [currentPath]
+				if comment.startswith('Basic settings:'):
+					self.basicSettings = comment.split(';')
+
 				line = line[0:line.find(';')]
 			T = getCodeInt(line, 'T')
 			if T is not None:
@@ -130,7 +135,7 @@ class gcode(object):
 					y = getCodeFloat(line, 'Y')
 					z = getCodeFloat(line, 'Z')
 					e = getCodeFloat(line, 'E')
-					#f = getCodeFloat(line, 'F')
+					f = getCodeFloat(line, 'F')
 					oldPos = pos[:]
 					if posAbs:
 						if x is not None:
@@ -146,12 +151,16 @@ class gcode(object):
 							pos[1] += y * scale
 						if z is not None:
 							pos[2] += z * scale
-					#if f is not None:
-					#	feedRate = f
-					#if x is not None or y is not None or z is not None:
-					#	diffX = oldPos[0] - pos[0]
-					#	diffY = oldPos[1] - pos[1]
-					#	totalMoveTimeMinute += math.sqrt(diffX * diffX + diffY * diffY) / feedRate
+					if f is not None:
+						feedRate = f
+					if x is not None or y is not None or z is not None:
+						diffX = oldPos[0] - pos[0]
+						diffY = oldPos[1] - pos[1]
+						totalMoveTimeMinute += math.sqrt(diffX * diffX + diffY * diffY) / feedRate
+						profile.getProfileSetting('filament_diameter')
+					elif e is not None:
+						totalRetractTimeMinute += 0.15/60
+						totalMoveTimeMinute += 0.15/60
 					moveType = 'move'
 					if e is not None:
 						if absoluteE:
@@ -288,7 +297,8 @@ class gcode(object):
 		if self.progressCallback is not None and self._fileSize > 0:
 			self.progressCallback(float(gcodeFile.tell()) / float(self._fileSize))
 		self.extrusionAmount = maxExtrusion
-		self.totalMoveTimeMinute = totalMoveTimeMinute
+		timeMultiplier = translate(totalMoveTimeMinute, 15, 240, 1.1, 1.25)
+		self.totalMoveTimeMinute = totalMoveTimeMinute * timeMultiplier
 		#print "Extruded a total of: %d mm of filament" % (self.extrusionAmount)
 		#print "Estimated print duration: %.2f minutes" % (self.totalMoveTimeMinute)
 
@@ -315,6 +325,25 @@ def getCodeFloat(line, code):
 		return float(line[n:m])
 	except:
 		return None
+
+def translate(value, inMin, inMax, outMin, outMax):
+    # Figure out how 'wide' each range is
+    leftSpan = inMax - inMin
+    rightSpan = outMax - outMin
+
+    # Convert the left range into a 0-1 range (float)
+    valueScaled = float(value - inMin) / float(leftSpan)
+
+
+    if valueScaled < 0:
+        valueScaled = 0;
+
+    if valueScaled > 1:
+        valueScaled = 1;
+
+    # Convert the 0-1 range into a value in the right range.
+
+    return outMin + (valueScaled * rightSpan)
 
 if __name__ == '__main__':
 	t = time.time()

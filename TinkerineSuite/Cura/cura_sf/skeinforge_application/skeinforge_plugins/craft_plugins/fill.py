@@ -879,10 +879,10 @@ class FillSkein(object):
 				self.addRotatedCarve(layerIndex, -surroundingIndex, reverseRotation, surroundingCarves)
 			for surroundingIndex in xrange(topThickness, self.solidSurfaceThickness +topThickness): #0 to 0 instead of 1 to 1 because solidSurface always +1 (line 1159)
 				self.addRotatedCarve(layerIndex, surroundingIndex, reverseRotation, surroundingCarves)
+
 				#print surroundingIndex
 				#self.distanceFeedRate.addLine('(<abc> %s )' % rotatedLayer.z)
-		print len(surroundingCarves)
-		if len(surroundingCarves) < self.doubleSolidSurfaceThickness:
+		if len(surroundingCarves) < self.doubleSolidSurfaceThickness :
 			extraShells = self.repository.extraShellsAlternatingSolidLayer.value
 			if self.lastExtraShells != self.repository.extraShellsBase.value:
 				extraShells = self.repository.extraShellsBase.value
@@ -929,7 +929,7 @@ class FillSkein(object):
 				gridCircular = True
 				layerInfillSolidity = 0.0
 			xSurroundingIntersectionsDictionaries = [infillDictionary]
-			for surroundingCarve in surroundingCarves:
+			for surroundingCarve in surroundingCarves: #THIS IS IT!!! This finds the intersections from the current and top(?) layer and later does NOT carve them out thus they are filled in.
 				xSurroundingIntersectionsDictionary = {}
 				euclidean.addXIntersectionsFromLoopsForTable(surroundingCarve, xSurroundingIntersectionsDictionary, self.infillWidth)
 				xSurroundingIntersectionsDictionaries.append(xSurroundingIntersectionsDictionary)
@@ -940,7 +940,7 @@ class FillSkein(object):
 				else:
 					surroundingXIntersections = []
 				addSparseEndpoints(doubleInfillWidth, endpoints, self.horizontalSegmentsDictionary, horizontalSegmentsDictionaryKey, layerInfillSolidity, removedEndpoints, self.solidSurfaceThickness, surroundingXIntersections)
-		else:
+		else: ###This is for the very bottom and top layers. without this, the top and bottom layers are not filled.
 			#if layerIndex > self.repository.bottomSurfaceThickness.value: #j
 			#self.distanceFeedRate.addLine('(<topLayer> %s )' % layerRotation)
 			for segments in self.horizontalSegmentsDictionary.values():

@@ -9,7 +9,7 @@ from Cura.util import stl2
 #from Cura.util import obj
 #from Cura.util import dae
 def loadSupportedExtensions():
-	return ['.stl', '.obj', '.dae', '.amf']
+	return ['.stl', '.obj', '.dae', '.amf', '.g', '.gcode']
 
 def saveSupportedExtensions():
 	return ['.stl']
@@ -45,9 +45,9 @@ def loadMesh(filename):
 	if ext == '.stl':
 		return stl2.stlModel().load(filename)
 	if ext == '.obj':
-		return obj.objModel().load(filename)
+		return obj.loadScene(filename)
 	if ext == '.dae':
-		return dae.daeModel().load(filename)
+		return dae.loadScene(filename)
 	print 'Error: Unknown model extension: %s' % (ext)
 	return None
 

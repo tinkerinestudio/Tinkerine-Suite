@@ -917,6 +917,7 @@ class ProjectSliceProgressWindow(wx.Frame):
 		self.abort = False
 		self.prevStep = 'start'
 		self.totalDoneFactor = 0.0
+		self.totalMoveTimeMinute = 0
 		self.startTime = time.time()
 		self.sliceStartTime = time.time()
 		
@@ -1059,9 +1060,11 @@ class ProjectSliceProgressWindow(wx.Frame):
 		status += "\nFilament: %.2fm %.2fg" % (gcode.extrusionAmount / 1000, gcode.calculateWeight() * 1000)
 		status += "\nPrint time: %02d:%02d" % (int(gcode.totalMoveTimeMinute / 60), int(gcode.totalMoveTimeMinute % 60))
 		cost = gcode.calculateCost()
+		self.totalMoveTimeMinute = gcode.totalMoveTimeMinute
 		if cost != False:
 			status += "\nCost: %s" % (cost)
 		profile.replaceGCodeTags(self.resultFilename, gcode)
+
 		wx.CallAfter(self.statusText.SetLabel, status)
 		wx.CallAfter(self.OnSliceDone)
 	

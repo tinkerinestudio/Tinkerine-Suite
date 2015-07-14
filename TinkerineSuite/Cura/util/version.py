@@ -42,6 +42,17 @@ def isDevVersion():
 	gitPath = os.path.abspath(os.path.join(os.path.split(os.path.abspath(__file__))[0], "../../.git"))
 	return os.path.exists(gitPath)
 
+def getBrand():
+	brandFile = os.path.abspath(os.path.join(os.path.split(os.path.abspath(__file__))[0], "../brand"))
+
+	if os.path.exists(brandFile):
+		f = open(brandFile, "r")
+		version = f.readline()
+		f.close()
+		return version.strip()
+	else:
+		return "tinkerine"
+
 def checkForNewerVersion():
 	return
 	if isDevVersion():

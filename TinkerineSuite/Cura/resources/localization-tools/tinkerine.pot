@@ -1,0 +1,341 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR ORGANIZATION
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"POT-Creation-Date: 2015-07-10 15:17+Pacific Daylight Time\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: pygettext.py 1.5\n"
+
+
+#: ..\..\gui\mainWindow.py:28
+msgid "Tinkerine Suite - "
+msgstr "VariQuest™ Trifecta™ - "
+
+#: ..\..\gui\mainWindow.py:32
+msgid "../suite.ico"
+msgstr "../variquest.ico"
+
+#: ..\..\gui\mainWindow.py:44 ..\..\gui\mainWindow.py:487
+msgid "Tinkerine Suite"
+msgstr "VariQuest™ Trifecta™"
+
+#: ..\..\gui\mainWindow.py:60
+msgid "Load model file...\tCTRL+L"
+msgstr ""
+
+#: ..\..\gui\mainWindow.py:62
+msgid "Save model...\tCTRL+S"
+msgstr ""
+
+#: ..\..\gui\mainWindow.py:64
+msgid "Clear platform"
+msgstr ""
+
+#: ..\..\gui\mainWindow.py:97
+msgid "&Recent Model Files"
+msgstr ""
+
+#: ..\..\gui\mainWindow.py:110
+msgid "Quit"
+msgstr ""
+
+#: ..\..\gui\mainWindow.py:112
+msgid "&File"
+msgstr ""
+
+#: ..\..\gui\mainWindow.py:132
+msgid "Open expert settings..."
+msgstr ""
+
+#: ..\..\gui\mainWindow.py:140
+msgid "Install custom firmware"
+msgstr ""
+
+#: ..\..\gui\mainWindow.py:159
+msgid "About Tinkerine Suite"
+msgstr "About VariQuest™ Trifecta™"
+
+#: ..\..\gui\mainWindow.py:161
+msgid "About"
+msgstr ""
+
+#: ..\..\gui\mainWindow.py:439
+msgid "Open firmware to upload"
+msgstr ""
+
+#: ..\..\gui\mainWindow.py:488
+msgid ""
+"\t[up][up][down][down][left][right][left][right][B][A][Enter]\n"
+"Plating, Preparing and Slicing for Fused Filament Fabrication 3D printing."
+msgstr ""
+
+#: ..\..\gui\mainWindow.py:489
+msgid "http://www.tinkerine.com"
+msgstr "http://www.variquest.com"
+
+#: ..\..\gui\mainWindow.py:490
+msgid "Copyright (C) Tinkerine"
+msgstr "Copyright (C) VariQuest"
+
+#: ..\..\gui\mainWindow.py:491
+msgid ""
+"\n"
+"    This program is free software: you can redistribute it and/or modify\n"
+"    it under the terms of the GNU Affero General Public License as published by\n"
+"    the Free Software Foundation, either version 3 of the License, or\n"
+"    (at your option) any later version.\n"
+"\n"
+"    This program is distributed in the hope that it will be useful,\n"
+"    but WITHOUT ANY WARRANTY; without even the implied warranty of\n"
+"    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the\n"
+"    GNU Affero General Public License for more details.\n"
+"\n"
+"    You should have received a copy of the GNU Affero General Public License\n"
+"    along with this program.  If not, see <http://www.gnu.org/licenses/>.\n"
+msgstr ""
+
+#: ..\..\gui\sceneView.py:81
+msgid "DittoPro3.stl"
+msgstr "trifecta14.stl"
+
+#: ..\..\gui\sceneView.py:122
+msgid "Add an object to the build platform"
+msgstr ""
+
+#: ..\..\gui\sceneView.py:122
+msgid "IMPORT"
+msgstr ""
+
+#: ..\..\gui\sceneView.py:123
+msgid "Edit Slicing Settings"
+msgstr ""
+
+#: ..\..\gui\sceneView.py:123
+msgid "SETTINGS"
+msgstr ""
+
+#: ..\..\gui\sceneView.py:125
+msgid "SLICE"
+msgstr ""
+
+#: ..\..\gui\sceneView.py:125
+msgid "Slice current build platform"
+msgstr ""
+
+#: ..\..\gui\sceneView.py:127
+msgid "ABORT"
+msgstr ""
+
+#: ..\..\gui\sceneView.py:136
+msgid "CAMERA VIEW"
+msgstr ""
+
+#: ..\..\gui\sceneView.py:137
+msgid "MODEL VIEW"
+msgstr ""
+
+#: ..\..\gui\sceneView.py:138
+msgid "PRINT "
+msgstr ""
+
+#: ..\..\gui\sceneView.py:139
+msgid "ROTATE "
+msgstr ""
+
+#: ..\..\gui\sceneView.py:140
+msgid "SCALE "
+msgstr ""
+
+#: ..\..\gui\sceneView.py:163 ..\..\gui\sceneView.py:2188
+msgid "Choose Save Destination"
+msgstr ""
+
+#: ..\..\gui\sceneView.py:222
+msgid "Build support only on the Exterior of the object"
+msgstr ""
+
+#: ..\..\gui\sceneView.py:223
+msgid "Build support everywhere it needs"
+msgstr ""
+
+#: ..\..\gui\sceneView.py:237
+msgid "Save Settings"
+msgstr ""
+
+#: ..\..\gui\sceneView.py:301 ..\..\gui\sceneView.py:314
+#: ..\..\gui\sceneView.py:1057
+msgid "DittoPro 3D Printer"
+msgstr "VariQuest™ Trifecta™"
+
+#: ..\..\gui\sceneView.py:308
+msgid "Litto 3D Printer"
+msgstr ""
+
+#: ..\..\gui\sceneView.py:311
+msgid "Ditto+ 3D Printer"
+msgstr ""
+
+#: ..\..\gui\sceneView.py:319
+msgid "Low: 300 micron"
+msgstr ""
+
+#: ..\..\gui\sceneView.py:322
+msgid "Medium: 200 micron"
+msgstr ""
+
+#: ..\..\gui\sceneView.py:325
+msgid "High: 100 micron"
+msgstr ""
+
+#: ..\..\gui\sceneView.py:328
+msgid "Ultra: 50 micron"
+msgstr ""
+
+#: ..\..\gui\sceneView.py:353
+msgid "filament_diameter"
+msgstr ""
+
+#: ..\..\gui\sceneView.py:357
+msgid "wall_thickness"
+msgstr ""
+
+#: ..\..\gui\sceneView.py:361
+msgid "support_angle"
+msgstr ""
+
+#: ..\..\gui\sceneView.py:365
+msgid "mm/s"
+msgstr ""
+
+#: ..\..\gui\sceneView.py:365
+msgid "print_speed"
+msgstr ""
+
+#: ..\..\gui\sceneView.py:371
+msgid "C"
+msgstr ""
+
+#: ..\..\gui\sceneView.py:371
+msgid "print_temperature"
+msgstr ""
+
+#: ..\..\gui\sceneView.py:382
+msgid "*Settings Saved*"
+msgstr ""
+
+#: ..\..\gui\sceneView.py:545
+msgid "Open 3D model"
+msgstr ""
+
+#: ..\..\gui\sceneView.py:593
+msgid "loading gcode... please wait..."
+msgstr ""
+
+#: ..\..\gui\sceneView.py:626
+msgid "Save 3D model"
+msgstr ""
+
+#: ..\..\gui\sceneView.py:633
+msgid "Saving model(s), please wait..."
+msgstr ""
+
+#: ..\..\gui\sceneView.py:739
+msgid "Save toolpath"
+msgstr ""
+
+#: ..\..\gui\sceneView.py:785
+msgid "Unable to save to SD Card"
+msgstr ""
+
+#: ..\..\gui\sceneView.py:795
+msgid "Save project gcode file"
+msgstr ""
+
+#: ..\..\gui\sceneView.py:807
+msgid " saved to directory"
+msgstr ""
+
+#: ..\..\gui\sceneView.py:812
+msgid "File Already Exists in Directory"
+msgstr ""
+
+#: ..\..\gui\sceneView.py:820
+msgid "SD Card Ejected"
+msgstr ""
+
+#: ..\..\gui\sceneView.py:823
+msgid "Unable to Eject SD Card"
+msgstr ""
+
+#: ..\..\gui\sceneView.py:849
+msgid "Failed to save"
+msgstr ""
+
+#: ..\..\gui\sceneView.py:1379
+msgid "Copies"
+msgstr ""
+
+#: ..\..\gui\sceneView.py:1379
+msgid "How many copies do you want?"
+msgstr ""
+
+#: ..\..\gui\sceneView.py:1379 ..\..\gui\sceneView.py:1990
+msgid "Multiply"
+msgstr ""
+
+#: ..\..\gui\sceneView.py:1383 ..\..\gui\sceneView.py:2005
+msgid "working... please wait..."
+msgstr ""
+
+#: ..\..\gui\sceneView.py:1491
+msgid "loading model... please wait..."
+msgstr ""
+
+#: ..\..\gui\sceneView.py:1989
+msgid "Delete"
+msgstr ""
+
+#: ..\..\gui\sceneView.py:1991
+msgid "Center on platform"
+msgstr ""
+
+#: ..\..\gui\sceneView.py:1993
+msgid "Split"
+msgstr ""
+
+#: ..\..\gui\sceneView.py:1997
+msgid "Delete all"
+msgstr ""
+
+#: ..\..\gui\sceneView.py:2175
+msgid "Save to SD Card: ["
+msgstr ""
+
+#: ..\..\gui\sceneView.py:2178 ..\..\gui\sceneView.py:2186
+msgid "No SD Card Detected"
+msgstr ""
+
+#: ..\..\gui\sceneView.py:2181
+msgid "Browse Destination"
+msgstr ""
+
+#: ..\..\gui\sceneView.py:2184
+msgid "Safely eject SD card"
+msgstr ""
+
+#: ..\..\gui\splashScreen.py:11
+msgid "splash.jpg"
+msgstr "splash-varitronics.jpg"
+
+#: ..\..\gui\util\openglGui.py:350
+msgid "Logo_suite.png"
+msgstr "logo_varitronics.png"
+

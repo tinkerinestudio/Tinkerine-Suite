@@ -24,10 +24,10 @@ class expertConfigWindow(wx.Frame):
 		self.configList.append(c)
 		validators.validFloat(c, 50, 500)
 		
-		c = configBase.SettingRow(left, "Bridge Feed (%)", 'bridge_feed_ratio', '90', 'Speed at which layers with bridges travel, compared to normal printing speed.')
+		c = configBase.SettingRow(left, "Bridge Feed (%)", 'bridge_feed_ratio', '100', 'Speed at which layers with bridges travel, compared to normal printing speed.')
 		self.configList.append(c)
 		validators.validFloat(c, 0.0)
-		c = configBase.SettingRow(left, "Bridge Flow (%)", 'bridge_flow_ratio', '90', 'Speed at which layers with bridges are printed, compared to normal printing speed.')
+		c = configBase.SettingRow(left, "Bridge Flow (%)", 'bridge_flow_ratio', '105', 'Speed at which layers with bridges are printed, compared to normal printing speed.')
 		self.configList.append(c)
 		validators.validFloat(c, 0.0)
 		

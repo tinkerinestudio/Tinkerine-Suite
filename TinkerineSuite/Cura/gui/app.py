@@ -7,17 +7,23 @@ import platform
 import shutil
 import glob
 import warnings
+from Cura.util import version
 
 #Only import the _core to save import time
 import wx._core
 
 class CuraApp(wx.App):
+
 	def __init__(self, files):
-		if platform.system() == "Windows" and not 'PYCHARM_HOSTED' in os.environ:
+		from Cura.util import resources
+		from Cura.util import version
+		brand = version.getBrand()
+		resources.setupLocalization(brand)
+
+		if not version.isDevVersion():
 			super(CuraApp, self).__init__(redirect = True, filename = 'output.txt')
 		else:
 			super(CuraApp, self).__init__(redirect = False)
-
 		self.mainWindow = None
 		self.splash = None
 		self.loadFiles = files
@@ -41,8 +47,6 @@ class CuraApp(wx.App):
 		from Cura.gui import mainWindow
 		from Cura.gui import configWizard
 		from Cura.util import profile
-		from Cura.util import resources
-		from Cura.util import version
 
 		#If we do not have preferences yet, try to load it from a previous Cura install
 		if profile.getPreference('machine_type') == 'unknown':
