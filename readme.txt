@@ -1,4 +1,4 @@
-Tinkerine Suite v1.1 by Tinkerine
+Tinkerine Suite v1.2 by Tinkerine
 Coordia is based on cura and runs skeinforge in the background for slice commands (with pypy for quicker slicing).
 
 By using this software, you agree to the following conditions:
